@@ -4,19 +4,21 @@ import type { GraphRow as GraphRowType } from "../../utils/graph";
 interface GraphRowProps {
   row: GraphRowType;
   rowHeight: number;
+  totalHeight?: number;
   laneWidth: number;
 }
 
 export const GraphRow: React.FC<GraphRowProps> = ({
   row,
   rowHeight,
+  totalHeight,
   laneWidth,
 }) => {
   const { commit, inputSwimlanes, outputSwimlanes } = row;
 
   // Dimensions
   const R = 5; // Curve radius
-  const H = rowHeight;
+  const H = totalHeight || rowHeight;
   const W = laneWidth;
   const H_2 = H / 2;
 

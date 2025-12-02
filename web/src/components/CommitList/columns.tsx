@@ -13,7 +13,31 @@ import {
 
 const columnHelper = createColumnHelper<GitCommit>();
 
+import { ChevronDown, ChevronRight } from "lucide-react";
+
 export const columns = [
+  columnHelper.display({
+    id: "expander",
+    header: () => null,
+    cell: ({ row }) => {
+      return row.getCanExpand() ? (
+        <button
+          {...{
+            onClick: row.getToggleExpandedHandler(),
+            style: { cursor: "pointer" },
+          }}
+          className="p-1 hover:bg-muted rounded"
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
+      ) : null;
+    },
+    size: 30,
+  }),
   columnHelper.accessor("refs", {
     header: "Branches",
     cell: (info) => {

@@ -2,10 +2,12 @@ import type { GitCommit } from "@/types/git";
 import {
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
 import { calculateGraph } from "../../utils/graph";
+import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
   TableBody,
@@ -36,7 +38,9 @@ export const CommitList: React.FC<CommitListProps> = ({
   const table = useReactTable({
     data: commits,
     columns,
+    getRowId: (row) => row.hash, // Use hash as ID for expansion map
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     defaultColumn: {
       minSize: 0,
       size: 0,
@@ -56,12 +60,17 @@ export const CommitList: React.FC<CommitListProps> = ({
       <div
         className="absolute pointer-events-none"
         style={{
-          left: branchColWidth,
+          left: branchColWidth + 30, // 200 (branches) + 30 (expander)
           top: 48, // Header height
           zIndex: 10,
+          pointerEvents: "none", // Force pointer-events: none
         }}
       >
-        <CommitGraph commits={commits} rowHeight={rowHeight} />
+        <CommitGraph
+          commits={commits}
+          rowHeight={rowHeight}
+          expandedRows={table.getState().expanded}
+        />
       </div>
 
       <table className="w-full caption-bottom text-sm">
@@ -98,28 +107,43 @@ export const CommitList: React.FC<CommitListProps> = ({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className="box-border hover:bg-muted/50"
-              style={{ height: rowHeight }}
-            >
-              {row.getVisibleCells().map((cell) => {
-                let widthStyle: React.CSSProperties = {};
-                if (cell.column.id === "graph") {
-                  widthStyle = { width: graphWidth, minWidth: graphWidth };
-                }
+            <React.Fragment key={row.id}>
+              <TableRow
+                className="box-border hover:bg-muted/50 cursor-pointer"
+                style={{ height: rowHeight }}
+                onClick={() => row.toggleExpanded()}
+                data-state={row.getIsExpanded() ? "selected" : undefined}
+              >
+                {row.getVisibleCells().map((cell) => {
+                  let widthStyle: React.CSSProperties = {};
+                  if (cell.column.id === "graph") {
+                    widthStyle = { width: graphWidth, minWidth: graphWidth };
+                  }
 
-                return (
-                  <TableCell
-                    key={cell.id}
-                    className="py-0 align-middle"
-                    style={widthStyle}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  return (
+                    <TableCell
+                      key={cell.id}
+                      className="py-0 align-middle"
+                      style={widthStyle}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+              {row.getIsExpanded() && (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="p-0">
+                    <div style={{ height: 256, overflowY: "auto" }}>
+                      <CommitDetails commit={row.original} />
+                    </div>
                   </TableCell>
-                );
-              })}
-            </TableRow>
+                </TableRow>
+              )}
+            </React.Fragment>
           ))}
           {!loading && commits.length === 0 && (
             <TableRow>
