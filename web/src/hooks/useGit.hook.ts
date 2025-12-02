@@ -1,6 +1,6 @@
+import type { GitCommit } from "@/types/git";
 import { useQuery } from "@tanstack/react-query";
 import gitDataService from "../services/git-data.service";
-import type { GitCommit } from "../types/git";
 
 export default function useGit() {
   const {
