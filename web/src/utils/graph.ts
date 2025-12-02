@@ -1,23 +1,18 @@
 import type { GitCommit } from "@/types/git";
 
-export interface GraphNode extends GitCommit {
-  x: number;
-  y: number;
+export interface Swimlane {
+  id: string; // Commit hash
   color: string;
 }
 
-export interface GraphLink {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  color: string;
-  type: "straight" | "curve" | "merge" | "fork";
+export interface GraphRow {
+  commit: GitCommit;
+  inputSwimlanes: Swimlane[];
+  outputSwimlanes: Swimlane[];
 }
 
 export interface GraphData {
-  nodes: GraphNode[];
-  links: GraphLink[];
+  rows: GraphRow[];
   height: number;
   width: number;
 }
@@ -37,112 +32,129 @@ export function calculateGraph(
   rowHeight: number = 24,
   laneWidth: number = 20
 ): GraphData {
-  const nodes: GraphNode[] = [];
-  const links: GraphLink[] = [];
+  const rows: GraphRow[] = [];
+  let currentSwimlanes: Swimlane[] = [];
+  let colorIndex = 0;
 
-  const commitIndices = new Map<string, number>();
-  commits.forEach((c, i) => commitIndices.set(c.hash, i));
+  // Helper to get next color
+  const getNextColor = () => {
+    const color = COLORS[colorIndex % COLORS.length];
+    colorIndex++;
+    return color;
+  };
 
-  // Pass 1: Assign Lanes and Coordinates
-  // lanes[i] stores the commit hash that is currently "flowing" through lane i
-  const lanes: (string | null)[] = [];
-  const nodeLanes = new Map<string, number>(); // Store assigned lane for each commit
+  // 0. Identify Main Line (HEAD) to prioritize colors or placement (optional but good)
+  // For now, we'll stick to the standard topo-sort processing which usually handles main line well enough
+  // if we prioritize the first parent.
 
-  commits.forEach((commit, index) => {
-    // 1. Determine lane for current commit
-    let laneIndex = lanes.findIndex((h) => h === commit.hash);
+  for (let i = 0; i < commits.length; i++) {
+    const commit = commits[i];
 
-    if (laneIndex === -1) {
-      // Not currently tracked in a lane (e.g. tip of a branch)
-      // Find first free lane
-      laneIndex = lanes.findIndex((h) => h === null);
-      if (laneIndex === -1) laneIndex = lanes.length;
+    // Deep copy input swimlanes
+    const inputSwimlanes = currentSwimlanes.map((s) => ({ ...s }));
+    const outputSwimlanes: Swimlane[] = [];
+
+    // 1. Determine Output Swimlanes
+    // Logic:
+    // - If commit is in input, that lane "consumes" the commit.
+    // - Parents are added to output.
+    // - First parent takes the commit's lane (continuation).
+    // - Other parents get new lanes (fork/merge).
+
+    // Find if this commit is already tracked in a swimlane
+    const inputIndex = inputSwimlanes.findIndex((s) => s.id === commit.hash);
+
+    // Determine the color for this commit
+    let commitColor = "";
+    if (inputIndex !== -1) {
+      commitColor = inputSwimlanes[inputIndex].color;
+    } else {
+      // Start of a new branch tip (not seen in inputs)
+      commitColor = getNextColor();
     }
 
-    // Assign this commit to this lane
-    nodeLanes.set(commit.hash, laneIndex);
+    // If commit was in input, we process that lane first
+    if (inputIndex !== -1) {
+      // Map input lanes to output
+      for (let j = 0; j < inputSwimlanes.length; j++) {
+        const lane = inputSwimlanes[j];
 
-    // Ensure lanes array is big enough
-    if (laneIndex >= lanes.length) {
-      for (let i = lanes.length; i <= laneIndex; i++) lanes[i] = null;
-    }
-    lanes[laneIndex] = commit.hash;
-
-    const node: GraphNode = {
-      ...commit,
-      x: (laneIndex + 1) * laneWidth,
-      y: index * rowHeight + rowHeight / 2,
-      color: COLORS[laneIndex % COLORS.length],
-    };
-    nodes.push(node);
-
-    // 2. Update lanes for parents (prepare for next commits)
-    const parents = commit.parents;
-
-    // The current commit is done with the lane, unless a parent takes it over.
-    // By default, clear the lane.
-    lanes[laneIndex] = null;
-
-    if (parents.length > 0) {
-      // First parent usually continues the lane (straight line)
-      const firstParent = parents[0];
-
-      // Check if first parent is already assigned a lane (merge case where parent was seen earlier? unlikely in topo sort)
-      // In topo sort, parents appear AFTER children.
-
-      // Assign first parent to current lane
-      // But wait, what if that lane is already taken by someone else in the future?
-      // (Not possible in this iteration step, we just cleared it)
-
-      // Check if first parent is already tracked in another lane (merge into existing branch)
-      const existingParentLane = lanes.findIndex((h) => h === firstParent);
-      if (existingParentLane !== -1) {
-        // Parent is already in a lane. We will merge INTO it later.
-        // Current lane remains empty (ends here).
-      } else {
-        // Parent takes over current lane
-        lanes[laneIndex] = firstParent;
-      }
-
-      // Secondary parents (forks/merges)
-      for (let i = 1; i < parents.length; i++) {
-        const parent = parents[i];
-        const existingLane = lanes.findIndex((h) => h === parent);
-        if (existingLane === -1) {
-          // Find new free lane for this parent
-          let newLane = lanes.findIndex((h) => h === null);
-          if (newLane === -1) newLane = lanes.length;
-          if (newLane >= lanes.length) lanes.push(null);
-          lanes[newLane] = parent;
+        if (j === inputIndex) {
+          // This is our commit's lane.
+          // Replace it with the First Parent (if any)
+          if (commit.parents.length > 0) {
+            outputSwimlanes.push({
+              id: commit.parents[0],
+              color: lane.color, // Continue color
+            });
+          } else {
+            // No parents (root), lane ends here.
+            // Do not push to output.
+          }
+        } else {
+          // Other lanes pass through
+          outputSwimlanes.push({ ...lane });
         }
       }
-    }
-  });
+    } else {
+      // Commit was NOT in input (new tip).
+      // We append it to the end (or find a gap? VS Code appends).
+      // But wait, we are building OUTPUT lanes.
 
-  // Pass 2: Generate Links
-  nodes.forEach((node) => {
-    node.parents.forEach((parentHash) => {
-      const parentIndex = commitIndices.get(parentHash);
-      if (parentIndex !== undefined) {
-        const parentNode = nodes[parentIndex];
+      // Copy all existing inputs to output first
+      outputSwimlanes.push(...inputSwimlanes.map((s) => ({ ...s })));
 
-        // Simple straight line for now, can be improved to Bezier later
-        links.push({
-          x1: node.x,
-          y1: node.y,
-          x2: parentNode.x,
-          y2: parentNode.y,
-          color: node.color, // Link color matches child
-          type: "straight", // Placeholder
+      // Now add our parents
+      if (commit.parents.length > 0) {
+        outputSwimlanes.push({
+          id: commit.parents[0],
+          color: commitColor,
         });
       }
+    }
+
+    // Handle remaining parents (2nd, 3rd...) - these are merges/forks
+    for (let p = 1; p < commit.parents.length; p++) {
+      const parentId = commit.parents[p];
+      // Check if this parent is already in output (merge into existing)
+      const existingOutputIndex = outputSwimlanes.findIndex(
+        (s) => s.id === parentId
+      );
+
+      if (existingOutputIndex === -1) {
+        // Add new lane for this parent
+        outputSwimlanes.push({
+          id: parentId,
+          color: getNextColor(),
+        });
+      }
+    }
+
+    // Consolidate: VS Code logic is slightly more complex to handle "visual" order.
+    // But strictly: Input -> [Process] -> Output.
+
+    // Optimization: If a parent is already in the input (merge), we should probably point to it?
+    // In standard git graph, we just care about "where do lines go next".
+
+    rows.push({
+      commit: { ...commit, color: commitColor },
+      inputSwimlanes,
+      outputSwimlanes,
     });
-  });
+
+    currentSwimlanes = outputSwimlanes;
+  }
 
   return {
-    nodes,
-    links,
+    rows,
     height: commits.length * rowHeight,
-    width: lanes.length * laneWidth + 40,
+    width:
+      Math.max(
+        ...rows.map((r) =>
+          Math.max(r.inputSwimlanes.length, r.outputSwimlanes.length)
+        )
+      ) *
+        laneWidth +
+      40,
   };
 }

@@ -21,6 +21,20 @@ class GitDataService {
 
   async getGitLog(): Promise<GitCommit[]> {
     if (!this.vscode) {
+      // Try fetching from local server API (Standalone Mode)
+      try {
+        const response = await fetch("/api/log");
+        if (response.ok) {
+          const data = await response.json();
+          return data;
+        }
+      } catch (e) {
+        console.warn(
+          "Failed to fetch from /api/log, falling back to mock data",
+          e
+        );
+      }
+
       return this.getMockData();
     }
 
@@ -50,22 +64,40 @@ class GitDataService {
       setTimeout(() => {
         resolve([
           {
-            hash: "mock1",
+            hash: "feat-tip",
+            parents: ["master-head"],
+            author: "Dev User",
+            email: "dev@example.com",
+            date: new Date(Date.now() + 10000).toISOString(),
+            refs: ["origin/feature"],
+            message: "Feature Tip (Should be Lane 1)",
+          },
+          {
+            hash: "toolbar-tip",
+            parents: ["master-head"],
+            author: "Dev User",
+            email: "dev@example.com",
+            date: new Date(Date.now() + 5000).toISOString(),
+            refs: ["origin/toolbar"],
+            message: "Toolbar Tip (Should be Lane 2)",
+          },
+          {
+            hash: "master-head",
+            parents: ["master-root"],
+            author: "Dev User",
+            email: "dev@example.com",
+            date: new Date(Date.now()).toISOString(),
+            refs: ["HEAD -> master"],
+            message: "Master Head (Should be Lane 0)",
+          },
+          {
+            hash: "master-root",
             parents: [],
             author: "Dev User",
             email: "dev@example.com",
-            date: new Date().toISOString(),
-            refs: ["HEAD -> master", "origin/master"],
-            message: "Initial mock commit",
-          },
-          {
-            hash: "mock2",
-            parents: ["mock1"],
-            author: "Dev User",
-            email: "dev@example.com",
-            date: new Date().toISOString(),
-            refs: ["feature/login"],
-            message: "Second mock commit",
+            date: new Date(Date.now() - 10000).toISOString(),
+            refs: [],
+            message: "Master Root (Should be Lane 0)",
           },
         ]);
       }, 500);

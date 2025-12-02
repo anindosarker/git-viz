@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: "./",
   build: {
-    outDir: "dist",
+    outDir: "../dist",
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -16,6 +16,11 @@ export default defineConfig({
         chunkFileNames: "assets/[name].js",
         assetFileNames: "assets/[name].[ext]",
       },
+    },
+  },
+  server: {
+    proxy: {
+      "/api": "http://localhost:3000",
     },
   },
   resolve: {

@@ -6,6 +6,7 @@ export interface GitCommit {
   date: string;
   refs: string[];
   message: string;
+  color?: string;
 }
 
 export interface GitLogResponse {

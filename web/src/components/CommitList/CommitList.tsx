@@ -5,9 +5,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import { useGraph } from "../../hooks/useGraph.hook";
-import { GraphLink } from "../Graph/GraphLink";
-import { GraphNode } from "../Graph/GraphNode";
+import { calculateGraph } from "../../utils/graph";
+import { CommitGraph } from "../Graph/CommitGraph";
 import {
   Table,
   TableBody,
@@ -29,16 +28,11 @@ export const CommitList: React.FC<CommitListProps> = ({
   rowHeight,
   loading,
 }) => {
-  // Calculate graph layout
-  const {
-    nodes,
-    links,
-    width: graphWidth,
-    height: graphHeight,
-  } = useGraph(commits, {
-    rowHeight,
-    laneWidth: 20,
-  });
+  // Calculate graph layout to get width
+  const { width: graphWidth } = React.useMemo(
+    () => calculateGraph(commits, rowHeight),
+    [commits, rowHeight]
+  );
 
   const table = useReactTable({
     data: commits,
@@ -65,23 +59,10 @@ export const CommitList: React.FC<CommitListProps> = ({
         style={{
           left: branchColWidth,
           top: 48, // Header height
-          width: graphWidth,
-          height: graphHeight,
           zIndex: 10,
         }}
       >
-        <svg width={graphWidth} height={graphHeight} className="block">
-          <g className="links">
-            {links.map((link, i) => (
-              <GraphLink key={`link-${i}`} link={link} />
-            ))}
-          </g>
-          <g className="nodes">
-            {nodes.map((node) => (
-              <GraphNode key={node.hash} node={node} />
-            ))}
-          </g>
-        </svg>
+        <CommitGraph commits={commits} rowHeight={rowHeight} />
       </div>
 
       <Table>
