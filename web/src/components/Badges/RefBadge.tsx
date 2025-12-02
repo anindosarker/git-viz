@@ -1,4 +1,4 @@
-import { GitBranch, GitCommitVertical, Tag } from "lucide-react";
+import { Check, Cloud, Laptop, Tag } from "lucide-react";
 import React from "react";
 
 interface RefBadgeProps {
@@ -11,10 +11,12 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
 
   let type: "head" | "remote" | "tag" | "branch" = "branch";
   let name = refName;
+  let isHead = false;
 
   if (refName.startsWith("HEAD -> ")) {
     type = "head";
     name = refName.replace("HEAD -> ", "");
+    isHead = true;
   } else if (refName.startsWith("tag: ")) {
     type = "tag";
     name = refName.replace("tag: ", "");
@@ -22,48 +24,53 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
     type = "remote";
   }
 
-  const getIcon = () => {
+  const getIcons = () => {
+    const icons = [];
+    if (isHead) {
+      icons.push(<Check key="check" className="w-3 h-3 mr-1" />);
+    }
+
     switch (type) {
       case "head":
       case "branch":
+        icons.push(<Laptop key="laptop" className="w-3 h-3 mr-1" />);
+        break;
       case "remote":
-        return <GitBranch className="w-3 h-3 mr-1" />;
+        icons.push(<Cloud key="cloud" className="w-3 h-3 mr-1" />);
+        break;
       case "tag":
-        return <Tag className="w-3 h-3 mr-1" />;
-      default:
-        return <GitCommitVertical className="w-3 h-3 mr-1" />;
+        icons.push(<Tag key="tag" className="w-3 h-3 mr-1" />);
+        break;
     }
+    return icons;
   };
 
-  // Custom colors to match GitLens style (approximate)
+  // Custom colors to match GitLens style
   const getStyle = () => {
     switch (type) {
       case "head":
-        return {
-          backgroundColor: "#007acc",
-          color: "white",
-          borderColor: "#007acc",
-        }; // VS Code Blue
       case "branch":
+        // Greenish/Teal for local branches
         return {
-          backgroundColor: "#1e1e1e",
-          color: "#cccccc",
-          borderColor: "#3e3e3e",
+          backgroundColor: "rgba(20, 80, 70, 0.9)",
+          color: "#4db6ac",
+          borderColor: "#26a69a",
           borderWidth: "1px",
         };
       case "remote":
+        // Blue for remote branches
         return {
-          backgroundColor: "#1e1e1e",
-          color: "#858585",
-          borderColor: "#3e3e3e",
+          backgroundColor: "rgba(20, 60, 100, 0.9)",
+          color: "#64b5f6",
+          borderColor: "#42a5f5",
           borderWidth: "1px",
-          borderStyle: "dashed",
         };
       case "tag":
+        // Yellow/Brown for tags
         return {
-          backgroundColor: "#2e2e2e",
-          color: "#d7ba7d",
-          borderColor: "#d7ba7d",
+          backgroundColor: "rgba(80, 70, 20, 0.9)",
+          color: "#ffd54f",
+          borderColor: "#ffca28",
           borderWidth: "1px",
         };
       default:
@@ -73,10 +80,10 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
 
   return (
     <div
-      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1 mb-1 border"
+      className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium border whitespace-nowrap"
       style={getStyle()}
     >
-      {getIcon()}
+      {getIcons()}
       {name}
     </div>
   );

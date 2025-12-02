@@ -57,6 +57,7 @@ export class GitService {
       const output = await this.exec(cwd, [
         "log",
         `--pretty=format:${format}`,
+        "--all", // Fetch all refs (branches, remotes, tags)
         "-n",
         "100", // Limit to 100 for now
         "--date=iso",

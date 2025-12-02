@@ -4,6 +4,13 @@ import { RefBadge } from "../Badges/RefBadge";
 import { Author } from "./Author";
 import { CommitMessage } from "./CommitMessage";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+
 const columnHelper = createColumnHelper<GitCommit>();
 
 export const columns = [
@@ -15,17 +22,28 @@ export const columns = [
 
       const firstRef = refs[0];
       const count = refs.length;
+      const hiddenRefs = refs.slice(1);
 
       return (
-        <div
-          className="flex items-center gap-1 h-full overflow-hidden"
-          title={refs.join("\n")}
-        >
+        <div className="flex items-center gap-1 h-full overflow-hidden">
           <RefBadge refName={firstRef} />
           {count > 1 && (
-            <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded-sm border">
-              +{count - 1}
-            </span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded-sm border cursor-default">
+                    +{count - 1}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="p-1 bg-popover border-border">
+                  <div className="flex flex-col gap-1">
+                    {hiddenRefs.map((ref, i) => (
+                      <RefBadge key={i} refName={ref} />
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       );

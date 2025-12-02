@@ -23,12 +23,13 @@ export interface GraphData {
 }
 
 const COLORS = [
-  "#00b0ff", // Blue
-  "#aa00ff", // Purple
-  "#ff0000", // Red
-  "#00ff00", // Green
-  "#ffaa00", // Orange
-  "#00aaaa", // Cyan
+  "#0098fa", // Blue
+  "#9a00fa", // Purple
+  "#00fa9a", // Spring Green
+  "#fa9a00", // Orange
+  "#fa0098", // Pink
+  "#00fafa", // Cyan
+  "#fafa00", // Yellow
 ];
 
 export function calculateGraph(
