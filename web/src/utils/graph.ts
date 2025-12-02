@@ -47,6 +47,9 @@ export function calculateGraph(
   // For now, we'll stick to the standard topo-sort processing which usually handles main line well enough
   // if we prioritize the first parent.
 
+  // Build a Set of commit hashes for quick lookup
+  const commitSet = new Set(commits.map((c) => c.hash));
+
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i];
 
@@ -55,67 +58,84 @@ export function calculateGraph(
     const outputSwimlanes: Swimlane[] = [];
 
     // 1. Determine Output Swimlanes
-    // Logic:
-    // - If commit is in input, that lane "consumes" the commit.
-    // - Parents are added to output.
-    // - First parent takes the commit's lane (continuation).
-    // - Other parents get new lanes (fork/merge).
+    let firstParentAdded = false;
+    let commitWasInInput = false;
 
-    // Find if this commit is already tracked in a swimlane
-    const inputIndex = inputSwimlanes.findIndex((s) => s.id === commit.hash);
+    // Map input lanes to output
+    for (let j = 0; j < inputSwimlanes.length; j++) {
+      const lane = inputSwimlanes[j];
 
-    // Determine the color for this commit
-    let commitColor = "";
-    if (inputIndex !== -1) {
-      commitColor = inputSwimlanes[inputIndex].color;
-    } else {
-      // Start of a new branch tip (not seen in inputs)
-      commitColor = getNextColor();
-    }
+      if (lane.id === commit.hash) {
+        commitWasInInput = true;
+        // This is our commit's lane (or one of them).
 
-    // If commit was in input, we process that lane first
-    if (inputIndex !== -1) {
-      // Map input lanes to output
-      for (let j = 0; j < inputSwimlanes.length; j++) {
-        const lane = inputSwimlanes[j];
+        if (!firstParentAdded) {
+          // Replace it with the First Parent (if any AND if it exists in our commit list)
+          if (commit.parents.length > 0 && commitSet.has(commit.parents[0])) {
+            // Check if this parent is already in output (to avoid duplicates)
+            // Note: In this loop, we are building output. If we have multiple lanes merging into one parent,
+            // we might add it multiple times if we are not careful?
+            // But here we only do this ONCE (when !firstParentAdded).
+            // Subsequent matching lanes will just be consumed (merged).
 
-        if (j === inputIndex) {
-          // This is our commit's lane.
-          // Replace it with the First Parent (if any)
-          if (commit.parents.length > 0) {
             outputSwimlanes.push({
               id: commit.parents[0],
               color: lane.color, // Continue color
             });
-          } else {
-            // No parents (root), lane ends here.
-            // Do not push to output.
           }
+          firstParentAdded = true;
         } else {
-          // Other lanes pass through
-          outputSwimlanes.push({ ...lane });
+          // Duplicate lane for this commit (merge from previous split).
+          // It is consumed here. We don't add anything to output.
         }
+      } else {
+        // Other lanes pass through
+        outputSwimlanes.push({ ...lane });
       }
+    }
+
+    // Determine color
+    // If commit was in input, use that color (we can grab it from inputSwimlanes)
+    // If not, generate new.
+    let commitColor = "";
+    const inputIndex = inputSwimlanes.findIndex((s) => s.id === commit.hash);
+    if (inputIndex !== -1) {
+      commitColor = inputSwimlanes[inputIndex].color;
     } else {
+      commitColor = getNextColor();
+    }
+
+    if (!commitWasInInput) {
       // Commit was NOT in input (new tip).
       // We append it to the end (or find a gap? VS Code appends).
-      // But wait, we are building OUTPUT lanes.
 
-      // Copy all existing inputs to output first
-      outputSwimlanes.push(...inputSwimlanes.map((s) => ({ ...s })));
+      // Copy all existing inputs to output first?
+      // Wait, we already iterated inputs and pushed them to output (since they didn't match commit.hash).
+      // So outputSwimlanes currently contains all passthroughs.
 
-      // Now add our parents
-      if (commit.parents.length > 0) {
-        outputSwimlanes.push({
-          id: commit.parents[0],
-          color: commitColor,
-        });
+      // Now add our parents (only if they exist in the commit list)
+      if (commit.parents.length > 0 && commitSet.has(commit.parents[0])) {
+        // Check if this parent is already in output (to avoid duplicates)
+        const existingIndex = outputSwimlanes.findIndex(
+          (s) => s.id === commit.parents[0]
+        );
+
+        if (existingIndex === -1) {
+          outputSwimlanes.push({
+            id: commit.parents[0],
+            color: commitColor,
+          });
+        }
       }
     }
 
     // Handle remaining parents (2nd, 3rd...) - these are merges/forks
     for (let p = 1; p < commit.parents.length; p++) {
       const parentId = commit.parents[p];
+
+      // Only process this parent if it exists in our commit list
+      if (!commitSet.has(parentId)) continue;
+
       // Check if this parent is already in output (merge into existing)
       const existingOutputIndex = outputSwimlanes.findIndex(
         (s) => s.id === parentId

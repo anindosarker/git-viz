@@ -46,168 +46,284 @@ export const GraphRow: React.FC<GraphRowProps> = ({
   const W = laneWidth;
   const H_2 = H / 2;
 
+  // Find the commit's input index (first one)
+  const commitInputIndex = inputSwimlanes.findIndex(
+    (s) => s.id === commit.hash
+  );
+
+  const isNewTip = commitInputIndex === -1;
+
   // 1. Draw connections from Input to Output
-
-  // We iterate through inputs to map them to outputs
-  // But wait, our output array construction logic was:
-  // - If input[i] is commit: replace with parent 0 (or remove)
-  // - Else: pass through
-  // - Then append other parents
-  // - Then append new tips (if we were processing them differently, but here we process row by row)
-
-  // Re-simulating the mapping to draw lines:
-
-  const usedOutputIndices = new Set<number>();
-
   for (let i = 0; i < inputSwimlanes.length; i++) {
     const inputLane = inputSwimlanes[i];
     const color = inputLane.color;
     const xInput = (i + 1) * W;
 
-    if (inputLane.id === commit.hash) {
-      // This is the current commit node.
-      // It connects to Output[i] if it has a first parent?
-      // In our logic: if commit has parents, outputSwimlanes[i] IS parent[0].
-      // So we draw a line from Input[i] to Output[i] (straight down)
+    let targetOutputIndex = -1;
 
-      // Draw line from Top to Middle (Node)
-      paths.push(
-        <path
-          key={`in-${i}`}
-          d={`M ${xInput} 0 L ${xInput} ${H_2}`}
-          stroke={color}
-          strokeWidth={2}
-          fill="none"
-        />
-      );
-
-      if (commit.parents.length > 0) {
-        // Draw line from Middle to Bottom (to First Parent)
-        // Our logic put first parent at same index `i` in output
-        paths.push(
-          <path
-            key={`out-straight-${i}`}
-            d={`M ${xInput} ${H_2} L ${xInput} ${H}`}
-            stroke={color} // Continue color
-            strokeWidth={2}
-            fill="none"
-          />
-        );
-        usedOutputIndices.add(i);
-      }
+    if (isNewTip) {
+      // All inputs are passthroughs and map 1:1
+      targetOutputIndex = i;
     } else {
-      // Passthrough lane
-      // In our logic, these are preserved at the same index?
-      // "Other lanes pass through" -> outputSwimlanes.push({ ...lane })
-      // Yes, if inputIndex < i, then output index is also i (since inputIndex was replaced or removed?)
-      // Wait, if inputIndex was removed (no parents), then indices shift?
-      // My logic in graph.ts:
-      // if (j === inputIndex) { ... } else { outputSwimlanes.push(lane) }
-      // So if inputIndex is removed, subsequent lanes shift left in output!
-
-      // Let's find where this lane went in output.
-      // It should be the same lane object (id match).
-      // But multiple lanes could have same ID (merges)? No, lanes are unique by index in array.
-      // We need to find the index `j` in output where `output[j].id === input[i].id` AND it's the "same" visual lane.
-
-      // Actually, my graph.ts logic was:
-      // if (j === inputIndex) ... else output.push(lane)
-      // So if inputIndex was removed, index `j` maps to `j-1` in output?
-      // If inputIndex was replaced, index `j` maps to `j` in output.
-
-      // Let's calculate target index
-      let targetIndex = -1;
-      const isCommitLaneRemoved =
-        inputSwimlanes.findIndex((s) => s.id === commit.hash) !== -1 &&
-        commit.parents.length === 0;
-      const commitInputIndex = inputSwimlanes.findIndex(
-        (s) => s.id === commit.hash
-      );
-
-      if (commitInputIndex !== -1) {
-        if (i < commitInputIndex) {
-          targetIndex = i;
-        } else if (i > commitInputIndex) {
-          targetIndex = isCommitLaneRemoved ? i - 1 : i;
+      if (inputLane.id === commit.hash) {
+        // This is a commit lane.
+        if (i === commitInputIndex) {
+          // PRIMARY commit lane.
+          // It continues if it has a parent in output.
+          if (
+            commit.parents.length > 0 &&
+            i < outputSwimlanes.length &&
+            outputSwimlanes[i].id === commit.parents[0]
+          ) {
+            targetOutputIndex = i;
+          }
+        } else {
+          // DUPLICATE commit lane (merging into primary).
+          // It does NOT continue to output (it ends/merges here).
+          targetOutputIndex = -1;
         }
       } else {
-        // New tip added at end?
-        // Input lanes map 1:1 to first N output lanes?
-        targetIndex = i;
+        // Passthrough lane
+        if (i < commitInputIndex) {
+          // Lanes before commit map 1:1
+          targetOutputIndex = i;
+        } else {
+          // Lanes after commit
+          // If commit continued, they map 1:1 (index i)
+          // If commit ended, they shift left (index i-1)
+
+          // Did commit continue?
+          // We can check if output[commitInputIndex] is the parent.
+          const commitContinues =
+            commit.parents.length > 0 &&
+            commitInputIndex < outputSwimlanes.length &&
+            outputSwimlanes[commitInputIndex].id === commit.parents[0];
+
+          targetOutputIndex = commitContinues ? i : i - 1;
+        }
       }
+    }
 
-      const xOutput = (targetIndex + 1) * W;
-
-      if (xInput === xOutput) {
-        // Straight vertical
+    if (inputLane.id === commit.hash) {
+      if (i === commitInputIndex) {
+        // Primary Commit Lane: Draw Top to Middle (Node)
         paths.push(
           <path
-            key={`pass-${i}`}
-            d={`M ${xInput} 0 L ${xInput} ${H}`}
+            key={`in-${i}`}
+            d={`M ${xInput} 0 L ${xInput} ${H_2}`}
             stroke={color}
             strokeWidth={2}
             fill="none"
           />
         );
+
+        // Draw continuation to bottom if target exists
+        if (
+          targetOutputIndex !== -1 &&
+          targetOutputIndex < outputSwimlanes.length
+        ) {
+          paths.push(
+            <path
+              key={`out-straight-${i}`}
+              d={`M ${xInput} ${H_2} L ${xInput} ${H}`}
+              stroke={color}
+              strokeWidth={2}
+              fill="none"
+            />
+          );
+        }
       } else {
-        // Curved shift (Bezier or Arc)
-        // VS Code uses Arcs for shifts.
-        // M x1 0 L x1 (H/2 - R) A R R 0 0 1 ...
+        // Duplicate Commit Lane: Merge into Primary
+        // Draw Top to Middle-ish, then curve to Primary Node
 
-        // Let's use a simple cubic bezier for smoothness if shift is small, or Arc if we want strict pipe.
-        // User wants "pipe".
+        // VS Code draws:
+        // M xInput 0
+        // A W W 0 0 1 xInput-W W (if shifting left)
+        // H xPrimary
 
-        // Shift logic:
-        // Vertical to H/2 - R
-        // Arc
-        // Horizontal
-        // Arc
-        // Vertical
+        // Let's use our standard shift logic but targeting the Node.
+        // Target X is the Node X.
+        const xNode = (commitInputIndex + 1) * W;
 
-        // Simplified: Just Bezier for now, but tight one?
-        // Or strict Arc implementation.
+        // We want to draw from (xInput, 0) to (xNode, H_2).
+        // But usually these merges look like "shoulders".
+        // VS Code:
+        // M xInput 0
+        // A W W 0 0 1 (xInput-W) W   <-- Curve down-left
+        // H xNode                    <-- Horizontal to node
 
-        // Let's try the Arc approach for "shift"
-        // It's a bit complex to implement perfectly without helper.
-        // Let's use a Cubic Bezier with control points close to the bend to simulate rounded corner.
-        // M x1 0 L x1 (H/2 - R) Q x1 H/2, (x1+x2)/2 H/2 ...
+        // But wait, VS Code's `d` construction:
+        // d.push(`M ${SWIMLANE_WIDTH * (index + 1)} 0`);
+        // d.push(`A ${SWIMLANE_WIDTH} ${SWIMLANE_WIDTH} 0 0 1 ${SWIMLANE_WIDTH * (index)} ${SWIMLANE_WIDTH}`);
+        // d.push(`H ${SWIMLANE_WIDTH * (circleIndex + 1)}`);
 
-        // Actually, standard S-curve is fine for shifts if they are just parallel moves.
-        // But user complained about "steep".
-        // The steepness comes from x distance vs y distance.
-        // Here Y distance is full H (24). X distance is usually 0 or 20.
+        // This assumes the merge happens at Y=SWIMLANE_WIDTH (which is H_2 in our case).
+        // And it assumes index > circleIndex (merging from right).
+        // If merging from left?
+
+        const direction = xInput > xNode ? -1 : 1;
+        // If merging from right (i > commitInputIndex), direction is -1.
+        // VS Code uses `0 0 1` sweep flag.
+
+        // Let's replicate VS Code's look:
+        // Curve starts at top, goes down and turns horizontal.
+        // Radius = W (laneWidth).
+
+        // If xInput > xNode (right to left):
+        // M xInput 0
+        // A W W 0 0 1 (xInput - W) W
+        // L xNode W
+        // (Assuming W is H_2? In VS Code W=11, H=22. So W = H/2. Yes!)
+
+        const d = [
+          `M ${xInput} 0`,
+          `A ${W} ${W} 0 0 ${direction === -1 ? 1 : 0} ${
+            xInput + direction * W
+          } ${W}`,
+          `L ${xNode} ${W}`,
+        ].join(" ");
 
         paths.push(
           <path
-            key={`pass-shift-${i}`}
-            d={`M ${xInput} 0 C ${xInput} ${H / 2}, ${xOutput} ${
-              H / 2
-            }, ${xOutput} ${H}`}
+            key={`merge-in-${i}`}
+            d={d}
             stroke={color}
             strokeWidth={2}
             fill="none"
           />
         );
       }
-      if (targetIndex !== -1) usedOutputIndices.add(targetIndex);
+    } else {
+      // Passthrough Lane
+      if (
+        targetOutputIndex !== -1 &&
+        targetOutputIndex < outputSwimlanes.length
+      ) {
+        const xOutput = (targetOutputIndex + 1) * W;
+
+        if (xInput === xOutput) {
+          // Straight
+          paths.push(
+            <path
+              key={`pass-${i}`}
+              d={`M ${xInput} 0 L ${xInput} ${H}`}
+              stroke={color}
+              strokeWidth={2}
+              fill="none"
+            />
+          );
+        } else {
+          // Shift
+          const direction = xOutput > xInput ? 1 : -1;
+          const safeR = Math.min(R, H / 2);
+
+          const d = [
+            `M ${xInput} 0`,
+            `L ${xInput} ${H_2 - safeR}`,
+            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 0 : 1} ${
+              xInput + direction * safeR
+            } ${H_2}`,
+            `L ${xOutput - direction * safeR} ${H_2}`,
+            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 1 : 0} ${xOutput} ${
+              H_2 + safeR
+            }`,
+            `L ${xOutput} ${H}`,
+          ].join(" ");
+
+          paths.push(
+            <path
+              key={`pass-shift-${i}`}
+              d={d}
+              stroke={color}
+              strokeWidth={2}
+              fill="none"
+            />
+          );
+        }
+      } else {
+        // Lane ends (e.g. at the bottom of the graph or merged/pruned)
+        // Draw line from Top to Middle? Or Top to Bottom?
+        // If it's a passthrough that disappears, it means it terminated in this row?
+        // But our graph.ts logic only terminates the *current commit's* lane.
+        // Passthroughs are always kept: `outputSwimlanes.push({ ...lane })`.
+        // So `targetOutputIndex` should ALWAYS be valid for passthroughs!
+        // Unless... `outputSwimlanes` is somehow shorter than expected?
+        // This can happen if we filtered out parents in `graph.ts` (the fix I made earlier).
+        // But `graph.ts` copies passthroughs UNCONDITIONALLY.
+        // Wait, `graph.ts`:
+        // if (j === inputIndex) { ... } else { outputSwimlanes.push({ ...lane }) }
+        // So passthroughs are ALWAYS preserved.
+        // So `targetOutputIndex` should always point to a valid lane.
+        // EXCEPT if my logic for `targetOutputIndex` calculation above is wrong.
+        // If `isNewTip`, `targetOutputIndex = i`.
+        // If `!isNewTip`:
+        //   If `i < commitInputIndex`: `targetOutputIndex = i`.
+        //   If `i > commitInputIndex`: `targetOutputIndex = commitContinues ? i : i - 1`.
+        // This covers all cases.
+        // So why did we see gaps?
+        // Because my previous logic was `outputSwimlaneIndex++`.
+        // If `outputSwimlanes` was shorter (because commit lane ended),
+        // the loop would finish before processing all inputs.
+        // Example: Input [A, B, C]. Commit B ends. Output [A, C].
+        // i=0 (A). outIdx=0. Maps A->A. outIdx becomes 1.
+        // i=1 (B). Commit lane. Ends.
+        // i=2 (C). outIdx=1. Maps C->C (Output[1]). outIdx becomes 2.
+        // Loop ends.
+        // Wait, my previous logic:
+        // i=1 (B). It is commit lane. `if (outputSwimlaneIndex < ... && match parent)`.
+        // Parent doesn't match (ended). So we DON'T increment `outputSwimlaneIndex`.
+        // outIdx remains 1.
+        // i=2 (C). `if (outputSwimlaneIndex < ... && match ID)`.
+        // Input C (id=C). Output[1] is C (id=C). Match!
+        // Maps C->C.
+        // So my previous logic WAS correct for that case?
+        // Why did it fail for the user?
+        // "First row at the bottom has separate lines".
+        // Maybe the issue is when `isNewTip`?
+        // If `isNewTip` (commit not in input).
+        // Input [A, B]. New Tip C. Output [A, B, C].
+        // i=0 (A). outIdx=0. Match A->A. outIdx=1.
+        // i=1 (B). outIdx=1. Match B->B. outIdx=2.
+        // Loop ends.
+        // C is handled by "New Tips" block.
+        // This also seems correct.
+        // What if `graph.ts` logic for "New Tip" is:
+        // `outputSwimlanes.push(...inputSwimlanes)`
+        // `outputSwimlanes.push(parent)`
+        // So inputs are preserved 1:1.
+        // Let's look at the user's screenshot again.
+        // It looks like the lines are shifting, but maybe to the wrong place?
+        // Or maybe the `id` check failed?
+        // If I use the new index-based logic, it is robust against ID mismatches.
+        // And it explicitly handles the shift logic.
+        // One edge case: `commitContinues` calculation.
+        // `outputSwimlanes[commitInputIndex].id === commit.parents[0]`
+        // This assumes that if it continues, it is at the exact same index.
+        // In `graph.ts`:
+        // `if (j === inputIndex) { outputSwimlanes.push(parent) }`
+        // Yes, it pushes to the same position relative to previous lanes.
+        // So this logic holds.
+      }
     }
   }
 
   // 2. Draw connections for New Tips (if commit was not in input)
   if (circleIndex >= inputSwimlanes.length) {
-    // It's a new tip.
-    // It starts at circleIndex.
-    // Draw line from Middle to Bottom (to First Parent)
+    // It's a new tip starting at this row
     const x = (circleIndex + 1) * W;
-    const color = commit.color; // We hacked this in
+    const color = commit.color;
 
-    // No line from top.
+    // No line from top (it's new)
 
-    if (commit.parents.length > 0) {
-      // First parent is at circleIndex in output?
-      // In my logic: output.push(...inputs); output.push(firstParent)
-      // So yes, it maps to circleIndex in output.
+    // Check if it has a parent in output
+    // For new tips, the parent is appended at the end of outputSwimlanes
+    // So we check if outputSwimlanes has an entry at circleIndex (or circleIndex maps to end)
 
+    // In graph.ts: outputSwimlanes.push(...inputSwimlanes); outputSwimlanes.push(parent);
+    // So parent is at inputSwimlanes.length, which IS circleIndex.
+
+    if (commit.parents.length > 0 && circleIndex < outputSwimlanes.length) {
+      // Draw line from Middle to Bottom
       paths.push(
         <path
           key={`new-tip-out`}
@@ -217,52 +333,35 @@ export const GraphRow: React.FC<GraphRowProps> = ({
           fill="none"
         />
       );
-      usedOutputIndices.add(circleIndex);
     }
   }
 
   // 3. Draw Merges/Forks (Secondary Parents)
-  // These go from Node (circleIndex) to Output lanes that were NOT covered by the straight line.
-  // In my logic, these were appended to outputSwimlanes.
-
-  // We need to identify which output lanes correspond to secondary parents.
-  // Iterate output lanes that are NOT in usedOutputIndices?
-  // Or better: iterate commit.parents[1..N] and find them in output.
-
   for (let p = 1; p < commit.parents.length; p++) {
     const parentId = commit.parents[p];
-    // Find this parent in outputSwimlanes
-    // Be careful: duplicates? (Merge into existing lane)
-    // We need to find the index that corresponds to THIS parent connection.
-    // In my logic: if existing, we use it. If not, we added it.
-
     const targetIndex = outputSwimlanes.findIndex((s) => s.id === parentId);
+
     if (targetIndex !== -1) {
       const xStart = (circleIndex + 1) * W;
       const xEnd = (targetIndex + 1) * W;
-      const color = commit.color; // Link color is child color? Or parent color?
-      // Usually merge lines are colored by the child (the one merging IN).
 
-      // Draw "Pipe" style connection:
-      // From (xStart, H/2) to (xEnd, H)
-      // Shape: Horizontal then Vertical (Rounded Corner)
-      // M xStart H/2 L xEnd-R H/2 A R R 0 0 1 xEnd H/2+R L xEnd H
+      const targetLane = outputSwimlanes[targetIndex];
+      const color = targetLane.color;
 
       const direction = xEnd > xStart ? 1 : -1;
-      const r = Math.min(R, Math.abs(xEnd - xStart) / 2); // Prevent radius > half width
+      const r = Math.min(R, Math.abs(xEnd - xStart) / 2);
 
-      // If xEnd is far, we draw:
-      // M xStart H/2
-      // L (xEnd - direction * r) H/2
-      // Q xEnd H/2, xEnd (H/2 + r)  <-- Quadratic bezier for corner
-      // L xEnd H
+      const d = [
+        `M ${xStart} ${H_2}`,
+        `L ${xEnd - direction * r} ${H_2}`,
+        `A ${r} ${r} 0 0 ${direction > 0 ? 1 : 0} ${xEnd} ${H_2 + r}`,
+        `L ${xEnd} ${H}`,
+      ].join(" ");
 
       paths.push(
         <path
           key={`merge-${p}`}
-          d={`M ${xStart} ${H_2} L ${
-            xEnd - direction * r
-          } ${H_2} Q ${xEnd} ${H_2}, ${xEnd} ${H_2 + r} L ${xEnd} ${H}`}
+          d={d}
           stroke={color}
           strokeWidth={2}
           fill="none"
