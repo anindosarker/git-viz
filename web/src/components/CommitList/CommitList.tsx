@@ -138,7 +138,10 @@ export const CommitList: React.FC<CommitListProps> = ({
                 <TableRow>
                   <TableCell colSpan={columns.length} className="p-0">
                     <div style={{ height: 256, overflowY: "auto" }}>
-                      <CommitDetails commit={row.original} />
+                      <CommitDetails
+                        commit={row.original}
+                        contentPaddingLeft={branchColWidth + 30 + graphWidth}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

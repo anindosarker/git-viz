@@ -3,11 +3,18 @@ import React from "react";
 
 interface CommitDetailsProps {
   commit: GitCommit;
+  contentPaddingLeft?: number;
 }
 
-export const CommitDetails: React.FC<CommitDetailsProps> = ({ commit }) => {
+export const CommitDetails: React.FC<CommitDetailsProps> = ({
+  commit,
+  contentPaddingLeft = 0,
+}) => {
   return (
-    <div className="p-4 bg-background border-b text-sm font-mono">
+    <div
+      className="p-4 bg-background border-b text-sm font-mono"
+      style={{ paddingLeft: contentPaddingLeft + 16 }} // +16 for default p-4
+    >
       <div className="grid grid-cols-[100px_1fr] gap-y-1">
         <div className="text-muted-foreground">Commit:</div>
         <div className="select-all">{commit.hash}</div>
