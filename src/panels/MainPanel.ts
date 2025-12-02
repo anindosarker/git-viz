@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { GitService } from "../services/GitService";
 import { getNonce } from "../utilities/getNonce";
 import { getUri } from "../utilities/getUri";
 
@@ -164,13 +165,29 @@ export class MainPanel {
    */
   private _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
-      (message: any) => {
+      async (message: any) => {
         const command = message.command;
         const text = message.text;
 
         switch (command) {
           case "hello":
             vscode.window.showInformationMessage(text);
+            return;
+          case "requestLog":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              try {
+                const log = await GitService.getLog(rootPath);
+                webview.postMessage({ command: "responseLog", data: log });
+              } catch (e) {
+                vscode.window.showErrorMessage("Failed to fetch git log");
+              }
+            } else {
+              vscode.window.showErrorMessage("No workspace folder open");
+            }
             return;
         }
       },
