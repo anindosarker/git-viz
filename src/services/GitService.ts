@@ -6,6 +6,7 @@ export interface GitCommit {
   author: string;
   email: string;
   date: string;
+  refs: string[];
   message: string;
 }
 
@@ -48,6 +49,7 @@ export class GitService {
       "%an", // Author Name
       "%ae", // Author Email
       "%ad", // Author Date
+      "%D", // Refs (Branches, Tags)
       "%s", // Subject
     ].join(separator);
 
@@ -61,7 +63,7 @@ export class GitService {
       ]);
 
       return output.split("\n").map((line) => {
-        const [hash, parents, author, email, date, message] =
+        const [hash, parents, author, email, date, refs, message] =
           line.split(separator);
         return {
           hash,
@@ -69,6 +71,7 @@ export class GitService {
           author,
           email,
           date,
+          refs: refs ? refs.split(", ").filter((r) => r) : [],
           message,
         };
       });

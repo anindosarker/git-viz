@@ -55,6 +55,7 @@ class GitDataService {
             author: "Dev User",
             email: "dev@example.com",
             date: new Date().toISOString(),
+            refs: ["HEAD -> master", "origin/master"],
             message: "Initial mock commit",
           },
           {
@@ -63,6 +64,7 @@ class GitDataService {
             author: "Dev User",
             email: "dev@example.com",
             date: new Date().toISOString(),
+            refs: ["feature/login"],
             message: "Second mock commit",
           },
         ]);

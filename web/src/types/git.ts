@@ -4,6 +4,7 @@ export interface GitCommit {
   author: string;
   email: string;
   date: string;
+  refs: string[];
   message: string;
 }
 
