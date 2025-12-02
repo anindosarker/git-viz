@@ -5,11 +5,10 @@ import {
   getExpandedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useState } from "react";
+import React from "react";
 import { calculateGraph } from "../../utils/graph";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import {
   TableBody,
   TableCell,
@@ -35,8 +34,6 @@ export const CommitList: React.FC<CommitListProps> = ({
     () => calculateGraph(commits, rowHeight),
     [commits, rowHeight]
   );
-
-  const [selectedCommit, setSelectedCommit] = useState<GitCommit | null>(null);
 
   const table = useReactTable({
     data: commits,
@@ -114,7 +111,7 @@ export const CommitList: React.FC<CommitListProps> = ({
               <TableRow
                 className="box-border hover:bg-muted/50 cursor-pointer"
                 style={{ height: rowHeight }}
-                onClick={() => setSelectedCommit(row.original)}
+                onClick={() => row.toggleExpanded()}
                 data-state={row.getIsExpanded() ? "selected" : undefined}
               >
                 {row.getVisibleCells().map((cell) => {
@@ -160,18 +157,6 @@ export const CommitList: React.FC<CommitListProps> = ({
           )}
         </TableBody>
       </table>
-
-      <Dialog
-        open={!!selectedCommit}
-        onOpenChange={(open) => !open && setSelectedCommit(null)}
-      >
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Commit Details</DialogTitle>
-          </DialogHeader>
-          {selectedCommit && <CommitDetails commit={selectedCommit} />}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
