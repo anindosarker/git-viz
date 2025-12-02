@@ -8,7 +8,6 @@ import React from "react";
 import { calculateGraph } from "../../utils/graph";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -52,7 +51,7 @@ export const CommitList: React.FC<CommitListProps> = ({
   const branchColWidth = 200; // Must match columns.tsx size
 
   return (
-    <div className="relative">
+    <div className="relative w-full overflow-x-auto">
       {/* Graph Overlay */}
       <div
         className="absolute pointer-events-none"
@@ -65,7 +64,7 @@ export const CommitList: React.FC<CommitListProps> = ({
         <CommitGraph commits={commits} rowHeight={rowHeight} />
       </div>
 
-      <Table>
+      <table className="w-full caption-bottom text-sm">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
@@ -130,7 +129,7 @@ export const CommitList: React.FC<CommitListProps> = ({
             </TableRow>
           )}
         </TableBody>
-      </Table>
+      </table>
     </div>
   );
 };
