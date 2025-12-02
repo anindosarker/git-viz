@@ -7,6 +7,7 @@ export interface GitCommit {
   refs: string[];
   message: string;
   color?: string;
+  authorAvatar?: string; // Optional: URL to author's avatar image
 }
 
 export interface GitLogResponse {

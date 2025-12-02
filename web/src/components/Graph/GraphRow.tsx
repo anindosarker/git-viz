@@ -370,16 +370,61 @@ export const GraphRow: React.FC<GraphRowProps> = ({
     }
   }
 
-  // 4. Draw Node Circle
+  // 4. Draw Node (Avatar Circle)
   const cx = (circleIndex + 1) * W;
   const cy = H_2;
   const color = commit.color;
 
+  // Extract initials from author name
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <g className="graph-row">
       {paths}
-      <circle cx={cx} cy={cy} r={4} fill={color} stroke="none" />
-      {/* Avatar or Initials could go here */}
+
+      {/* Background circle with branch color */}
+      <circle cx={cx} cy={cy} r={8} fill={color} />
+
+      {/* Avatar or Initials */}
+      {commit.authorAvatar ? (
+        <>
+          {/* Clip path for circular avatar */}
+          <defs>
+            <clipPath id={`clip-${commit.hash}`}>
+              <circle cx={cx} cy={cy} r={7} />
+            </clipPath>
+          </defs>
+          <image
+            href={commit.authorAvatar}
+            x={cx - 7}
+            y={cy - 7}
+            width={14}
+            height={14}
+            clipPath={`url(#clip-${commit.hash})`}
+          />
+        </>
+      ) : (
+        <text
+          x={cx}
+          y={cy}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize="8"
+          fill="white"
+          fontWeight="600"
+          fontFamily="system-ui, -apple-system, sans-serif"
+        >
+          {getInitials(commit.author)}
+        </text>
+      )}
     </g>
   );
 };
