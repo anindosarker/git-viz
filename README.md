@@ -1,71 +1,101 @@
-# git-viz README
+# git-viz
 
-This is the README for your extension "git-viz". After writing up a brief description, we recommend including the following sections.
+A Git visualization tool that works both as a **VS Code Extension** and a **Standalone Web Viewer**.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Visualize commit history and branches (Git Graph).
+- View commit details, authors, and dates.
+- Works directly within VS Code or in any browser.
 
-For example if there is an image subfolder under your extension project workspace:
+## Prerequisites
 
-\!\[feature X\]\(images/feature-x.png\)
+- [Node.js](https://nodejs.org/) (v14 or higher)
+- [Git](https://git-scm.com/)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Installation
 
-## Requirements
+1. Clone the repository:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+   ```bash
+   git clone <repository-url>
+   cd git-viz
+   ```
 
-## Extension Settings
+2. Install dependencies for the extension:
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+   ```bash
+   npm install
+   ```
 
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+3. Install dependencies for the web view:
+   ```bash
+   cd web
+   npm install
+   ```
 
 ---
 
-## Following extension guidelines
+## 🚀 Running the Standalone Server
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+You can run `git-viz` as a standalone web server to visualize any local git repository in your browser.
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+1. Build the web client:
 
-## Working with Markdown
+   ```bash
+   cd web
+   npm run build
+   ```
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+2. Start the server:
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+   ```bash
+   # Syntax: node server.cjs [path-to-repo]
 
-## For more information
+   # Example: Visualize the current directory
+   node server.cjs
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+   # Example: Visualize a specific repository
+   node server.cjs /Users/username/projects/my-app
+   ```
 
-**Enjoy!**
+3. Open your browser and navigate to:
+   ```
+   http://localhost:3000
+   ```
+
+---
+
+## 💻 Running the VS Code Extension
+
+To develop or run the extension within VS Code:
+
+1. ensure the web assets are built (the extension loads the built files):
+
+   ```bash
+   cd web
+   npm run build
+   ```
+
+   > **Note:** You can also run `npm run dev` in the `web` folder if you want to develop the UI in a browser first, but the VS Code extension specifically looks for files in `web/dist`.
+
+2. Open the project in VS Code:
+
+   ```bash
+   code .
+   ```
+
+3. Press **F5** (or go to **Run and Debug** > **Run Extension**) to start the Extension Host window.
+
+4. In the new Extension Host window:
+   - Open any folder that is a Git repository.
+   - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
+   - Run the command: **Hello World** (This corresponds to `git-viz.helloWorld`).
+   - The Git Viz panel will open.
+
+## Project Structure
+
+- `src/`: Source code for the VS Code extension (TypeScript).
+- `web/`: Source code for the React-based UI.
+  - `web/server.cjs`: Express-like server script for the standalone mode.
+  - `web/src/`: React components and logic.
