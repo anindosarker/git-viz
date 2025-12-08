@@ -178,6 +178,8 @@ export class MainPanel {
         const command = message.command;
         const text = message.text;
 
+        console.log(`[MainPanel] Received message: ${command}`, message);
+
         switch (command) {
           case "hello":
             vscode.window.showInformationMessage(text);
@@ -212,6 +214,159 @@ export class MainPanel {
                 });
               } catch (e) {
                 // Ignore error
+              }
+            }
+            return;
+          case "copyCommitHash":
+            vscode.env.clipboard.writeText(message.data);
+            return;
+          case "checkoutCommit":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              const commitHash = message.data;
+              const shortHash = commitHash.substring(0, 7);
+
+              const items: vscode.QuickPickItem[] = [
+                {
+                  label: "$(check) Checkout to Commit",
+                  description: "(detached)",
+                  detail: `Will checkout to commit $(git-commit) ${shortHash}`,
+                },
+                {
+                  label:
+                    "$(git-branch) Create & Switch to New Branch from Commit",
+                  description: "Branch",
+                  detail: `Will create and switch to a new branch from commit $(git-commit) ${shortHash}`,
+                },
+              ];
+
+              const selection = await vscode.window.showQuickPick(items, {
+                placeHolder: `Confirm Switch to Commit ${shortHash}`,
+              });
+
+              if (!selection) return;
+
+              try {
+                if (selection.label.includes("Checkout to Commit")) {
+                  await GitService.checkout(rootPath, commitHash);
+                  vscode.window.showInformationMessage(
+                    `Checked out commit ${shortHash}`
+                  );
+                } else if (selection.label.includes("Create & Switch")) {
+                  const branchName = await vscode.window.showInputBox({
+                    prompt: "Enter new branch name",
+                    placeHolder: "e.g., feature/my-new-branch",
+                  });
+                  if (branchName) {
+                    await GitService.createBranch(
+                      rootPath,
+                      branchName,
+                      commitHash
+                    );
+                    await GitService.checkout(rootPath, branchName);
+                    vscode.window.showInformationMessage(
+                      `Created and checked out branch ${branchName}`
+                    );
+                  }
+                }
+                // Trigger log refresh
+                webview.postMessage({ command: "refreshLog" });
+              } catch (e: any) {
+                vscode.window.showErrorMessage(
+                  `Failed to checkout commit: ${e.message}`
+                );
+              }
+            }
+            return;
+          case "checkoutBranch":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              const branchName = message.data;
+
+              const items: vscode.QuickPickItem[] = [
+                {
+                  label: "$(check) Switch to Branch",
+                  description: branchName,
+                  detail: `Will switch to branch $(git-branch) ${branchName}`,
+                },
+              ];
+
+              const selection = await vscode.window.showQuickPick(items, {
+                placeHolder: `Confirm Switch to Branch ${branchName}`,
+              });
+
+              if (!selection) return;
+
+              try {
+                await GitService.checkout(rootPath, branchName);
+                vscode.window.showInformationMessage(
+                  `Checked out branch ${branchName}`
+                );
+                webview.postMessage({ command: "refreshLog" });
+              } catch (e: any) {
+                vscode.window.showErrorMessage(
+                  `Failed to checkout branch: ${e.message}`
+                );
+              }
+            }
+            return;
+          case "deleteBranch":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              const branchName = message.data;
+              const answer = await vscode.window.showWarningMessage(
+                `Are you sure you want to delete branch '${branchName}'?`,
+                { modal: true },
+                "Delete"
+              );
+              if (answer === "Delete") {
+                try {
+                  await GitService.deleteBranch(rootPath, branchName);
+                  vscode.window.showInformationMessage(
+                    `Deleted branch ${branchName}`
+                  );
+                  webview.postMessage({ command: "refreshLog" });
+                } catch (e: any) {
+                  vscode.window.showErrorMessage(
+                    `Failed to delete branch: ${e.message}`
+                  );
+                }
+              }
+            }
+            return;
+          case "mergeBranch":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              const branchName = message.data;
+              const answer = await vscode.window.showWarningMessage(
+                `Are you sure you want to merge '${branchName}' into current branch?`,
+                { modal: true },
+                "Merge"
+              );
+              if (answer === "Merge") {
+                try {
+                  await GitService.merge(rootPath, branchName);
+                  vscode.window.showInformationMessage(
+                    `Merged branch ${branchName}`
+                  );
+                  webview.postMessage({ command: "refreshLog" });
+                } catch (e: any) {
+                  vscode.window.showErrorMessage(
+                    `Failed to merge branch: ${e.message}`
+                  );
+                }
               }
             }
             return;

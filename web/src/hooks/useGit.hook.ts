@@ -10,7 +10,7 @@ export default function useGit() {
     refetch: fetchLog,
   } = useQuery<GitCommit[], Error>({
     queryKey: ["gitLog"],
-    queryFn: () => gitDataService.getGitLog(),
+    queryFn: () => gitDataService.getLog(),
     refetchOnWindowFocus: false, // Prevent excessive refetches in VS Code webview
   });
 

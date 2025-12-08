@@ -6,9 +6,17 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import gitDataService from "../../services/git-data.service";
 import { calculateGraph } from "../../utils/graph";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 import {
   TableBody,
   TableCell,
@@ -108,32 +116,88 @@ export const CommitList: React.FC<CommitListProps> = ({
         <TableBody>
           {table.getRowModel().rows.map((row) => (
             <React.Fragment key={row.id}>
-              <TableRow
-                className="box-border hover:bg-muted/50 cursor-pointer"
-                style={{ height: rowHeight }}
-                onClick={() => row.toggleExpanded()}
-                data-state={row.getIsExpanded() ? "selected" : undefined}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  let widthStyle: React.CSSProperties = {};
-                  if (cell.column.id === "graph") {
-                    widthStyle = { width: graphWidth, minWidth: graphWidth };
-                  }
+              <ContextMenu>
+                <ContextMenuTrigger asChild>
+                  <TableRow
+                    className="box-border hover:bg-muted/50 cursor-pointer"
+                    style={{ height: rowHeight }}
+                    onClick={() => row.toggleExpanded()}
+                    data-state={row.getIsExpanded() ? "selected" : undefined}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      let widthStyle: React.CSSProperties = {};
+                      if (cell.column.id === "graph") {
+                        widthStyle = {
+                          width: graphWidth,
+                          minWidth: graphWidth,
+                        };
+                      }
 
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      className="py-0 align-middle"
-                      style={widthStyle}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          className="py-0 align-middle"
+                          style={widthStyle}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-64">
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      gitDataService.checkoutCommit(row.original.hash);
+                    }}
+                  >
+                    Switch to Commit...
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Implement branch creation
+                    }}
+                  >
+                    Create Branch...
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Implement tag creation
+                    }}
+                  >
+                    Create Tag...
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(row.original.hash);
+                    }}
+                  >
+                    Copy SHA
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(row.original.message);
+                    }}
+                  >
+                    Copy Message
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
               {row.getIsExpanded() && (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="p-0">

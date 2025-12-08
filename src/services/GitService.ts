@@ -141,4 +141,42 @@ export class GitService {
       return null;
     }
   }
+
+  /**
+   * Checkouts a commit or branch.
+   */
+  public static async checkout(cwd: string, ref: string): Promise<string> {
+    return this.exec(cwd, ["checkout", ref]);
+  }
+
+  /**
+   * Deletes a branch.
+   */
+  public static async deleteBranch(
+    cwd: string,
+    branch: string
+  ): Promise<string> {
+    return this.exec(cwd, ["branch", "-D", branch]);
+  }
+
+  /**
+   * Merges a branch into the current branch.
+   */
+  public static async merge(cwd: string, branch: string): Promise<string> {
+    return this.exec(cwd, ["merge", branch]);
+  }
+  /**
+   * Creates a branch.
+   */
+  public static async createBranch(
+    cwd: string,
+    branch: string,
+    startPoint?: string
+  ): Promise<string> {
+    const args = ["branch", branch];
+    if (startPoint) {
+      args.push(startPoint);
+    }
+    return this.exec(cwd, args);
+  }
 }

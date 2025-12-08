@@ -1,5 +1,13 @@
 import { Check, Cloud, Laptop, Tag } from "lucide-react";
 import React from "react";
+import gitDataService from "../../services/git-data.service";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "../ui/context-menu";
 
 interface RefBadgeProps {
   refName: string;
@@ -78,13 +86,61 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
     }
   };
 
-  return (
+  const handleCopyBranchName = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(name);
+  };
+
+  const badge = (
     <div
-      className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium border whitespace-nowrap"
+      className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium border whitespace-nowrap cursor-context-menu"
       style={getStyle()}
     >
       {getIcons()}
       {name}
     </div>
+  );
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{badge}</ContextMenuTrigger>
+      <ContextMenuContent className="w-64">
+        {type === "branch" || type === "head" ? (
+          <>
+            <ContextMenuItem
+              inset
+              onClick={(e) => {
+                e.stopPropagation();
+                gitDataService.checkoutBranch(name);
+              }}
+            >
+              Switch to Branch...
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              onClick={(e) => {
+                e.stopPropagation();
+                gitDataService.mergeBranch(name);
+              }}
+            >
+              Merge Branch into Current Branch...
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              onClick={(e) => {
+                e.stopPropagation();
+                gitDataService.deleteBranch(name);
+              }}
+            >
+              Delete Branch...
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        ) : null}
+        <ContextMenuItem inset onClick={handleCopyBranchName}>
+          Copy Name
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 };
