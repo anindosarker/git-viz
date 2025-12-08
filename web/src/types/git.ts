@@ -1,11 +1,6 @@
-export interface GitCommit {
-  hash: string;
-  parents: string[];
-  author: string;
-  email: string;
-  date: string;
-  refs: string[];
-  message: string;
+import type { GitCommit as CoreGitCommit } from "@git-viz/shared";
+
+export interface GitCommit extends CoreGitCommit {
   color?: string;
   authorAvatar?: string; // Optional: URL to author's avatar image
   body?: string; // Full commit message body

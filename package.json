@@ -56,10 +56,14 @@
     "typescript-eslint": "^8.46.3"
   },
   "workspaces": [
-    "web"
+    "web",
+    "shared",
+    "backend"
   ],
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "@git-viz/backend": "1.0.0",
+    "@git-viz/shared": "1.0.0"
   }
 }

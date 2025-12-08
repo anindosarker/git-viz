@@ -1,0 +1,27 @@
+{
+  "name": "@git-viz/backend",
+  "version": "1.0.0",
+  "main": "dist/git/GitExecutor.js",
+  "exports": {
+    "./GitExecutor": "./dist/git/GitExecutor.js",
+    "./GitLogService": "./dist/git/GitLogService.js",
+    "./GitBranchService": "./dist/git/GitBranchService.js",
+    "./GitRepoService": "./dist/git/GitRepoService.js"
+  },
+  "typesIndices": {
+    "./GitExecutor": "./dist/git/GitExecutor.d.ts",
+    "./GitLogService": "./dist/git/GitLogService.d.ts",
+    "./GitBranchService": "./dist/git/GitBranchService.d.ts",
+    "./GitRepoService": "./dist/git/GitRepoService.d.ts"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@git-viz/shared": "1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^22.0.0"
+  }
+}

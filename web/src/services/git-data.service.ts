@@ -1,11 +1,12 @@
 import type { GitCommit } from "@/types/git";
+import type { WebviewApi } from "vscode-webview";
 
 class GitDataService {
-  private vscode: any;
+  private vscode: WebviewApi<unknown> | undefined;
 
   constructor() {
-    if (typeof window !== "undefined" && (window as any).acquireVsCodeApi) {
-      this.vscode = (window as any).acquireVsCodeApi();
+    if (typeof window !== "undefined" && window.acquireVsCodeApi) {
+      this.vscode = window.acquireVsCodeApi();
     }
   }
 
