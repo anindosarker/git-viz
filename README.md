@@ -15,6 +15,18 @@ A Git visualization tool that works both as a **VS Code Extension** and a **Stan
 
 ## Installation
 
+### From Releases (Manual)
+
+1. Go to the [Releases](https://github.com/anindosarker/git-viz/releases) page.
+2. Download the `.vsix` file from the latest release.
+3. Open VS Code.
+4. Go to the Extensions view (`Ctrl+Shift+X` or `Cmd+Shift+X`).
+5. Click the "..." (Views and More Actions) menu at the top right of the Extensions view.
+6. Select **Install from VSIX...**.
+7. Select the downloaded `.vsix` file.
+
+### From Source
+
 1. Clone the repository:
 
    ```bash
