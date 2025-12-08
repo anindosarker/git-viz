@@ -27,7 +27,9 @@
     "url": "https://github.com/anindosarker/git-viz/issues"
   },
   "homepage": "https://github.com/anindosarker/git-viz#readme",
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
