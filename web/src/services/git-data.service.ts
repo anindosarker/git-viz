@@ -58,6 +58,30 @@ class GitDataService {
     });
   }
 
+  async getRepoInfo(): Promise<{ repo: string; branch: string }> {
+    if (!this.vscode) {
+      return { repo: "mock-repo", branch: "mock-branch" };
+    }
+
+    return new Promise((resolve, reject) => {
+      const handleMessage = (event: MessageEvent) => {
+        const message = event.data;
+        if (message.command === "responseRepoInfo") {
+          window.removeEventListener("message", handleMessage);
+          resolve(message.data);
+        }
+      };
+
+      window.addEventListener("message", handleMessage);
+      this.vscode!.postMessage({ command: "requestRepoInfo" });
+
+      setTimeout(() => {
+        window.removeEventListener("message", handleMessage);
+        reject(new Error("Timeout waiting for repo info"));
+      }, 5000);
+    });
+  }
+
   private async getMockData(): Promise<GitCommit[]> {
     console.warn("VS Code API not available, using mock data");
     return new Promise((resolve) => {

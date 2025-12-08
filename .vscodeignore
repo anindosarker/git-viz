@@ -1,11 +1,41 @@
+
+# Build artifacts
+out/**
+web/dist/**
+
+# VS Code specific
 .vscode/**
 .vscode-test/**
+
+# Source files
 src/**
+web/**
+
+# Dependencies (bundled by webpack/esbuild usually, or not needed if only devDeps)
+node_modules/**
+
+# Config files
 .gitignore
 .yarnrc
+.vscodeignore
+tsconfig.json
+eslint.config.mjs
+web/tsconfig.json
+web/tsconfig.app.json
+web/tsconfig.node.json
+web/vite.config.ts
+web/vite.config.js
+web/eslint.config.js
+web/index.html
+web/server.cjs
 vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
+
+# Maps and logs
 **/*.map
-**/*.ts
+**/*.log
 **/.vscode-test.*
+npm-debug.log
+
+# Negate the exclusion for the distribution files we specifically want
+!out/**
+!web/dist/**

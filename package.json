@@ -9,22 +9,36 @@
   "categories": [
     "Other"
   ],
+  "publisher": "anindosarker",
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "visualization",
+    "graph",
+    "history",
+    "gui"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/anindosarker/git-viz.git"
   },
+  "bugs": {
+    "url": "https://github.com/anindosarker/git-viz/issues"
+  },
+  "homepage": "https://github.com/anindosarker/git-viz#readme",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "git-viz.helloWorld",
-        "title": "Hello World"
+        "command": "git-viz.showCommitGraph",
+        "title": "GitViz: Show Commit Graph"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build --workspace=web && npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
