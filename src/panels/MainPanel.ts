@@ -51,11 +51,19 @@ export class MainPanel {
       MainPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
     } else {
       // If a webview panel does not already exist create and show a new one
+      let repoName = "git-viz";
+      if (
+        vscode.workspace.workspaceFolders &&
+        vscode.workspace.workspaceFolders.length > 0
+      ) {
+        repoName = vscode.workspace.workspaceFolders[0].name;
+      }
+
       const panel = vscode.window.createWebviewPanel(
         // Panel view type
         "showHelloWorld",
         // Panel title
-        "Hello World",
+        `Commit Graph: ${repoName}`,
         // The editor column the panel should be displayed in
         vscode.ViewColumn.One,
         // Extra panel configurations
@@ -69,6 +77,7 @@ export class MainPanel {
           ],
         }
       );
+      panel.iconPath = vscode.Uri.joinPath(extensionUri, "icon.png");
 
       MainPanel.currentPanel = new MainPanel(panel, extensionUri);
     }
@@ -81,7 +90,7 @@ export class MainPanel {
    */
   public static register(context: vscode.ExtensionContext) {
     const command = vscode.commands.registerCommand(
-      "git-viz.helloWorld",
+      "git-viz.showCommitGraph",
       () => {
         MainPanel.render(context.extensionUri);
       }
@@ -148,7 +157,7 @@ export class MainPanel {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
-          <title>Hello World</title>
+          <title>git-viz</title>
         </head>
         <body>
           <div id="root"></div>
@@ -187,6 +196,23 @@ export class MainPanel {
               }
             } else {
               vscode.window.showErrorMessage("No workspace folder open");
+            }
+            return;
+          case "requestRepoInfo":
+            if (
+              vscode.workspace.workspaceFolders &&
+              vscode.workspace.workspaceFolders.length > 0
+            ) {
+              const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+              try {
+                const info = await GitService.getRepoInfo(rootPath);
+                webview.postMessage({
+                  command: "responseRepoInfo",
+                  data: info,
+                });
+              } catch (e) {
+                // Ignore error
+              }
             }
             return;
         }

@@ -39,6 +39,23 @@ export class GitService {
   }
 
   /**
+   * Gets repository information (name and current branch).
+   */
+  public static async getRepoInfo(
+    cwd: string
+  ): Promise<{ repo: string; branch: string }> {
+    try {
+      const repoRoot = await this.exec(cwd, ["rev-parse", "--show-toplevel"]);
+      const branch = await this.exec(cwd, ["branch", "--show-current"]);
+      const repoName = repoRoot.split("/").pop() || "";
+      return { repo: repoName, branch };
+    } catch (error) {
+      console.error("Failed to fetch repo info:", error);
+      return { repo: "", branch: "" };
+    }
+  }
+
+  /**
    * Fetches the git log for the given repository.
    */
   public static async getLog(cwd: string): Promise<GitCommit[]> {
