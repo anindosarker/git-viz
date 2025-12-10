@@ -36,6 +36,10 @@
       {
         "command": "git-viz.showCommitGraph",
         "title": "GitViz: Show Commit Graph"
+      },
+      {
+        "command": "git-viz.switchBranch",
+        "title": "GitViz: Switch Branch"
       }
     ]
   },

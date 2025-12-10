@@ -21,9 +21,9 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
   let name = refName;
   let isHead = false;
 
-  if (refName.startsWith("HEAD -> ")) {
+  if (refName === "HEAD" || refName.startsWith("HEAD -> ")) {
     type = "head";
-    name = refName.replace("HEAD -> ", "");
+    name = refName === "HEAD" ? "HEAD" : refName.replace("HEAD -> ", "");
     isHead = true;
   } else if (refName.startsWith("tag: ")) {
     type = "tag";
@@ -105,12 +105,13 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
     <ContextMenu>
       <ContextMenuTrigger asChild>{badge}</ContextMenuTrigger>
       <ContextMenuContent className="w-64">
-        {type === "branch" || type === "head" ? (
+        {type === "branch" || type === "head" || type === "remote" ? (
           <>
             <ContextMenuItem
               inset
-              onClick={(e) => {
-                e.stopPropagation();
+              onSelect={(e) => {
+                e.preventDefault(); // Prevent closing immediately if needed, though radix usually handles it.
+                // But specifically, use onSelect
                 gitDataService.checkoutBranch(name);
               }}
             >
@@ -118,8 +119,8 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
             </ContextMenuItem>
             <ContextMenuItem
               inset
-              onClick={(e) => {
-                e.stopPropagation();
+              onSelect={() => {
+                // e.preventDefault();
                 gitDataService.mergeBranch(name);
               }}
             >
@@ -127,8 +128,8 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
             </ContextMenuItem>
             <ContextMenuItem
               inset
-              onClick={(e) => {
-                e.stopPropagation();
+              onSelect={() => {
+                // e.preventDefault();
                 gitDataService.deleteBranch(name);
               }}
             >
