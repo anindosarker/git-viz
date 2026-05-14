@@ -8,10 +8,9 @@ export interface GraphNode {
 }
 
 export interface CommitRow extends GitCommitSummary {
+  refs: GitRefPointer[];
   color?: string;
   authorAvatar?: string;
-  refs: GitRefPointer[];
-  kind?: GraphRowKind;
 }
 
 export interface GraphRow {
@@ -21,11 +20,4 @@ export interface GraphRow {
   outputSwimlanes: GraphNode[];
   nodeColumn: number;
   metadata?: Record<string, unknown>;
-}
-
-export interface GraphData {
-  rows: GraphRow[];
-  height: number;
-  width: number;
-  laneCount: number;
 }
