@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useStore } from "../../state/store";
 
@@ -61,22 +62,29 @@ export function FilterChips() {
   return (
     <div className="flex items-center gap-1 flex-wrap py-1 px-2 border-b bg-muted/20 text-xs">
       <span className="text-muted-foreground mr-1">Filters:</span>
-      {chips.map((c) => (
-        <span
-          key={c.key}
-          className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 border"
-        >
-          {c.label}
-          <button
-            type="button"
-            onClick={c.onClear}
-            className="hover:text-destructive"
-            aria-label={`Remove filter ${c.label}`}
+      <AnimatePresence initial={false}>
+        {chips.map((c) => (
+          <motion.span
+            key={c.key}
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, x: -8, transition: { duration: 0.1, ease: "easeIn" } }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 border"
           >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      ))}
+            {c.label}
+            <button
+              type="button"
+              onClick={c.onClear}
+              className="hover:text-destructive"
+              aria-label={`Remove filter ${c.label}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </motion.span>
+        ))}
+      </AnimatePresence>
       <button
         type="button"
         onClick={() => {
