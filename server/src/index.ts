@@ -23,6 +23,7 @@ function parseOptions(argv: string[]): ServerOptions {
     .option("-p, --port <n>", "Port to listen on", "3000")
     .option("-b, --bind <addr>", "Bind address", "127.0.0.1")
     .allowUnknownOption(true)
+    .allowExcessArguments(true)
     .parse(argv, { from: "user" });
   const opts = program.opts<{ repo: string; port: string; bind: string }>();
   return {
