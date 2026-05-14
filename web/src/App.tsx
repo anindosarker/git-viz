@@ -1,7 +1,9 @@
 import type { CommitRow, GitRefPointer } from "@/types/git";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { CommitDetails } from "./components/CommitDetails/CommitDetails";
 import { CommitList } from "./components/CommitList/CommitList";
+import { DiffViewer } from "./components/DiffViewer/DiffViewer";
 import { PreferencesPanel } from "./components/PreferencesPanel/PreferencesPanel";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit";
@@ -77,13 +79,15 @@ function GitGraphApp() {
         </div>
       )}
 
-      <div className="border rounded-md flex overflow-hidden grow">
-        <div className="grow overflow-auto">
+      <div className="border rounded-md flex flex-col overflow-hidden grow">
+        <div className="grow overflow-auto min-h-0">
           <CommitList commits={rows} rowHeight={rowHeight} loading={loading} />
         </div>
+        <CommitDetails />
       </div>
 
       <PreferencesPanel />
+      <DiffViewer />
     </div>
   );
 }
