@@ -7,17 +7,17 @@ interface DiffLineProps {
   newLine?: number;
 }
 
-const KIND_CLS = {
-  context: "bg-transparent",
-  add: "bg-green-500/10",
-  del: "bg-red-500/10",
+const KIND_STYLE: Record<DiffLineProps["kind"], React.CSSProperties> = {
+  context: { backgroundColor: "transparent" },
+  add: { backgroundColor: "var(--gitviz-add-bg)" },
+  del: { backgroundColor: "var(--gitviz-del-bg)" },
 };
 
 const SIGN = { context: " ", add: "+", del: "−" };
 
 export const DiffLine: React.FC<DiffLineProps> = ({ kind, text, oldLine, newLine }) => {
   return (
-    <div className={`flex font-mono text-xs leading-5 ${KIND_CLS[kind]}`}>
+    <div className="flex font-mono text-xs leading-5" style={KIND_STYLE[kind]}>
       <span className="w-10 px-2 text-right text-muted-foreground tabular-nums select-none shrink-0">
         {oldLine ?? ""}
       </span>

@@ -22,11 +22,24 @@ const Component: React.FC<ColumnRendererProps> = ({ row }) => {
     <div className="flex items-center gap-2 text-xs">
       <span className="text-muted-foreground tabular-nums">{files}f</span>
       <div className="flex items-center w-12 h-2 rounded-sm overflow-hidden bg-muted">
-        <div className="bg-green-600" style={{ width: `${insPct}%`, height: "100%" }} />
-        <div className="bg-red-600 flex-1" style={{ height: "100%" }} />
+        <div
+          style={{
+            width: `${insPct}%`,
+            height: "100%",
+            backgroundColor: "var(--gitviz-add-fg)",
+          }}
+        />
+        <div
+          className="flex-1"
+          style={{ height: "100%", backgroundColor: "var(--gitviz-del-fg)" }}
+        />
       </div>
-      <span className="text-green-600 tabular-nums">+{insertions}</span>
-      <span className="text-red-600 tabular-nums">-{deletions}</span>
+      <span className="tabular-nums" style={{ color: "var(--gitviz-add-fg)" }}>
+        +{insertions}
+      </span>
+      <span className="tabular-nums" style={{ color: "var(--gitviz-del-fg)" }}>
+        -{deletions}
+      </span>
     </div>
   );
 };

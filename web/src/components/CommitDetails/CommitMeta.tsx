@@ -41,23 +41,36 @@ function SignatureBadge({ details }: { details?: GitCommitDetails }) {
     good: {
       icon: <ShieldCheck className="h-3 w-3" />,
       label: "Verified",
-      cls: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30",
+      style: {
+        backgroundColor: "var(--gitviz-badge-branch-bg)",
+        color: "var(--gitviz-badge-branch-fg)",
+        borderColor: "transparent",
+      },
     },
     bad: {
       icon: <ShieldAlert className="h-3 w-3" />,
       label: "Bad signature",
-      cls: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30",
+      style: {
+        backgroundColor: "color-mix(in srgb, var(--vscode-charts-red) 18%, transparent)",
+        color: "var(--vscode-charts-red)",
+        borderColor: "transparent",
+      },
     },
     untrusted: {
       icon: <ShieldQuestion className="h-3 w-3" />,
       label: "Untrusted",
-      cls: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30",
+      style: {
+        backgroundColor: "var(--gitviz-badge-tag-bg)",
+        color: "var(--gitviz-badge-tag-fg)",
+        borderColor: "transparent",
+      },
     },
   } as const;
   const cfg = map[status];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] ${cfg.cls}`}
+      className="inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px]"
+      style={cfg.style}
       title={signer ? `${cfg.label} — ${signer}` : cfg.label}
     >
       {cfg.icon}

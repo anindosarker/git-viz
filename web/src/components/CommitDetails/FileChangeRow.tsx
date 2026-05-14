@@ -7,13 +7,13 @@ interface FileChangeRowProps {
   style?: React.CSSProperties;
 }
 
-const STATUS_META: Record<GitFileChange["status"], { label: string; cls: string }> = {
-  A: { label: "A", cls: "text-green-600 dark:text-green-400" },
-  M: { label: "M", cls: "text-amber-600 dark:text-amber-400" },
-  D: { label: "D", cls: "text-red-600 dark:text-red-400" },
-  R: { label: "R", cls: "text-blue-600 dark:text-blue-400" },
-  C: { label: "C", cls: "text-purple-600 dark:text-purple-400" },
-  T: { label: "T", cls: "text-cyan-600 dark:text-cyan-400" },
+const STATUS_META: Record<GitFileChange["status"], { label: string; color: string }> = {
+  A: { label: "A", color: "var(--gitviz-add-fg)" },
+  M: { label: "M", color: "var(--gitviz-mod-fg)" },
+  D: { label: "D", color: "var(--gitviz-del-fg)" },
+  R: { label: "R", color: "var(--gitviz-rename-fg)" },
+  C: { label: "C", color: "var(--vscode-charts-purple)" },
+  T: { label: "T", color: "var(--vscode-charts-blue)" },
 };
 
 export const FileChangeRow: React.FC<FileChangeRowProps> = ({ file, onClick, style }) => {
@@ -27,12 +27,14 @@ export const FileChangeRow: React.FC<FileChangeRowProps> = ({ file, onClick, sty
       style={style}
       title={path}
     >
-      <span className={`w-4 text-center font-bold ${meta.cls}`}>{meta.label}</span>
+      <span className="w-4 text-center font-bold" style={{ color: meta.color }}>
+        {meta.label}
+      </span>
       <span className="truncate grow">{path}</span>
-      <span className="text-green-600 dark:text-green-400 tabular-nums shrink-0">
+      <span className="tabular-nums shrink-0" style={{ color: "var(--gitviz-add-fg)" }}>
         +{file.insertions}
       </span>
-      <span className="text-red-600 dark:text-red-400 tabular-nums shrink-0">
+      <span className="tabular-nums shrink-0" style={{ color: "var(--gitviz-del-fg)" }}>
         −{file.deletions}
       </span>
     </button>

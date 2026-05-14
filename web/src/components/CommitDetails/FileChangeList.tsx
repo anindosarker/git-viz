@@ -54,10 +54,14 @@ export const FileChangeList: React.FC<FileChangeListProps> = ({
     <div className="flex flex-col min-h-0 flex-1">
       <div className="flex items-center gap-3 px-3 py-1 border-b text-xs bg-muted/20">
         <span className="font-medium">Files changed ({list.length})</span>
-        <span className="text-green-600 dark:text-green-400 tabular-nums">+{totals.add}</span>
-        <span className="text-red-600 dark:text-red-400 tabular-nums">−{totals.del}</span>
+        <span className="tabular-nums" style={{ color: "var(--gitviz-add-fg)" }}>
+          +{totals.add}
+        </span>
+        <span className="tabular-nums" style={{ color: "var(--gitviz-del-fg)" }}>
+          −{totals.del}
+        </span>
         {truncated && (
-          <span className="ml-auto text-amber-600 dark:text-amber-400">
+          <span className="ml-auto" style={{ color: "var(--gitviz-mod-fg)" }}>
             Truncated — only showing first {list.length}
           </span>
         )}
