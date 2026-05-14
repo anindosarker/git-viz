@@ -1,5 +1,5 @@
+import type { GraphRow as GraphRowType } from "@/graph";
 import React from "react";
-import type { GraphRow as GraphRowType } from "../../utils/graph";
 
 interface GraphRowProps {
   row: GraphRowType;

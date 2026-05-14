@@ -6,8 +6,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import { rollingAlgorithm } from "@/graph";
 import gitDataService from "../../services/git-data.service";
-import { calculateGraph } from "../../utils/graph";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
@@ -28,10 +28,10 @@ interface CommitListProps {
 
 export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, loading }) => {
   // Calculate graph layout to get width
-  const { width: graphWidth } = React.useMemo(
-    () => calculateGraph(commits, rowHeight),
-    [commits, rowHeight]
-  );
+  const graphWidth = React.useMemo(() => {
+    const result = rollingAlgorithm.compute({ commits, rowHeight, laneWidth: 20 });
+    return result.laneCount * 20 + 40;
+  }, [commits, rowHeight]);
 
   const table = useReactTable({
     data: commits,

@@ -1,11 +1,11 @@
-import type { GitCommit } from "@/types/git";
+import { rollingAlgorithm, type GraphRow as GraphRowType } from "@/graph";
+import type { GitCommitSummary } from "@git-viz/shared";
 import type { ExpandedState } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import { calculateGraph } from "../../utils/graph";
 import { GraphRow } from "./GraphRow";
 
 interface CommitGraphProps {
-  commits: GitCommit[];
+  commits: GitCommitSummary[];
   rowHeight?: number;
   expandedRows?: ExpandedState;
   detailHeight?: number;
@@ -15,11 +15,15 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
   commits,
   rowHeight = 24,
   expandedRows = {},
-  detailHeight = 256, // Fixed height for details view
+  detailHeight = 256,
 }) => {
-  const { rows, width } = useMemo(() => calculateGraph(commits, rowHeight), [commits, rowHeight]);
+  const laneWidth = 20;
+  const { rows, width } = useMemo(() => {
+    const result = rollingAlgorithm.compute({ commits, rowHeight, laneWidth });
+    const w = result.laneCount * laneWidth + 40;
+    return { rows: result.rows as GraphRowType[], width: w };
+  }, [commits, rowHeight, laneWidth]);
 
-  // Calculate dynamic Y positions
   const rowPositions = useMemo(() => {
     let currentY = 0;
     return rows.map((row) => {
@@ -47,7 +51,7 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
         const { y, height } = rowPositions[index];
         return (
           <g key={row.commit.hash} transform={`translate(0, ${y})`}>
-            <GraphRow row={row} rowHeight={rowHeight} totalHeight={height} laneWidth={20} />
+            <GraphRow row={row} rowHeight={rowHeight} totalHeight={height} laneWidth={laneWidth} />
           </g>
         );
       })}
