@@ -8,6 +8,8 @@ import {
 import React from "react";
 import { rollingAlgorithm } from "@/graph";
 import { gitActions } from "../../services/git-actions.service";
+import { useActionsStore } from "../../state/actionsStore";
+import { runAction } from "../Actions/runAction";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
@@ -15,6 +17,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "../ui/context-menu";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
@@ -131,29 +136,112 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
                     inset
                     onClick={(e) => {
                       e.stopPropagation();
-                      gitActions.checkoutCommit(row.original.hash);
+                      const hash = row.original.hash;
+                      useActionsStore.getState().openConfirm({
+                        title: "Checkout commit",
+                        description: `Check out ${hash.slice(0, 7)}? This will detach HEAD.`,
+                        confirmLabel: "Checkout",
+                        onConfirm: async () => {
+                          await runAction(`Checkout ${hash.slice(0, 7)}`, () =>
+                            gitActions.checkoutRef({ ref: hash })
+                          );
+                        },
+                      });
                     }}
                   >
-                    Switch to Commit...
+                    Checkout commit…
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem
                     inset
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: Implement branch creation
+                      useActionsStore.getState().openModal({
+                        kind: "branch-create",
+                        context: { startPoint: row.original.hash },
+                      });
                     }}
                   >
-                    Create Branch...
+                    Create branch from this commit…
+                  </ContextMenuItem>
+                  <ContextMenuSub>
+                    <ContextMenuSubTrigger inset>
+                      Reset current branch to here
+                    </ContextMenuSubTrigger>
+                    <ContextMenuSubContent>
+                      <ContextMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          useActionsStore.getState().openModal({
+                            kind: "reset",
+                            context: { target: row.original.hash, mode: "soft" },
+                          });
+                        }}
+                      >
+                        Soft
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          useActionsStore.getState().openModal({
+                            kind: "reset",
+                            context: { target: row.original.hash, mode: "mixed" },
+                          });
+                        }}
+                      >
+                        Mixed
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        className="text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          useActionsStore.getState().openModal({
+                            kind: "reset",
+                            context: { target: row.original.hash, mode: "hard" },
+                          });
+                        }}
+                      >
+                        Hard (destructive)
+                      </ContextMenuItem>
+                    </ContextMenuSubContent>
+                  </ContextMenuSub>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      useActionsStore.getState().openModal({
+                        kind: "cherry-pick",
+                        context: { hashes: [row.original.hash] },
+                      });
+                    }}
+                  >
+                    Cherry-pick
                   </ContextMenuItem>
                   <ContextMenuItem
                     inset
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: Implement tag creation
+                      useActionsStore.getState().openModal({
+                        kind: "revert",
+                        context: { hash: row.original.hash },
+                      });
                     }}
                   >
-                    Create Tag...
+                    Revert
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    inset
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      useActionsStore.getState().openModal({
+                        kind: "tag-create",
+                        context: { target: row.original.hash },
+                      });
+                    }}
+                  >
+                    Create tag here…
                   </ContextMenuItem>
                   <ContextMenuSeparator />
                   <ContextMenuItem

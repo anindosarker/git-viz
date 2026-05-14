@@ -1,6 +1,8 @@
 import { Check, Cloud, Laptop, Tag } from "lucide-react";
 import React from "react";
 import { gitActions } from "../../services/git-actions.service";
+import { useActionsStore } from "../../state/actionsStore";
+import { runAction } from "../Actions/runAction";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -109,31 +111,121 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
           <>
             <ContextMenuItem
               inset
-              onSelect={(e) => {
-                e.preventDefault(); // Prevent closing immediately if needed, though radix usually handles it.
-                // But specifically, use onSelect
-                gitActions.checkoutBranch(name);
+              onSelect={() => {
+                void runAction(`Checkout ${name}`, () => gitActions.checkoutRef({ ref: name }));
               }}
             >
-              Switch to Branch...
+              Checkout
             </ContextMenuItem>
             <ContextMenuItem
               inset
               onSelect={() => {
-                // e.preventDefault();
-                gitActions.mergeBranch(name);
+                useActionsStore.getState().openModal({
+                  kind: "branch-create",
+                  context: { startPoint: name },
+                });
               }}
             >
-              Merge Branch into Current Branch...
+              Create branch from here…
             </ContextMenuItem>
             <ContextMenuItem
               inset
               onSelect={() => {
-                // e.preventDefault();
-                gitActions.deleteBranch(name);
+                useActionsStore.getState().openModal({
+                  kind: "branch-rename",
+                  context: { from: name },
+                });
               }}
             >
-              Delete Branch...
+              Rename…
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              onSelect={() => {
+                useActionsStore.getState().openConfirm({
+                  title: `Delete branch ${name}`,
+                  description: `Delete local branch \`${name}\`?`,
+                  confirmLabel: "Delete",
+                  onConfirm: async () => {
+                    await runAction(`Delete ${name}`, () => gitActions.branchDelete({ name }));
+                  },
+                });
+              }}
+            >
+              Delete
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              className="text-destructive"
+              onSelect={() => {
+                useActionsStore.getState().openConfirm({
+                  title: `Force-delete branch ${name}`,
+                  description: `Branch may contain unmerged commits. This cannot be undone.`,
+                  typedConfirm: name,
+                  destructive: true,
+                  confirmLabel: "Force delete",
+                  onConfirm: async () => {
+                    await runAction(`Force-delete ${name}`, () =>
+                      gitActions.branchDelete({ name, force: true })
+                    );
+                  },
+                });
+              }}
+            >
+              Force delete…
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem
+              inset
+              onSelect={() => {
+                useActionsStore.getState().openModal({
+                  kind: "merge",
+                  context: { ref: name },
+                });
+              }}
+            >
+              Merge into current
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              onSelect={() => {
+                useActionsStore.getState().openModal({
+                  kind: "rebase",
+                  context: { onto: name },
+                });
+              }}
+            >
+              Rebase onto current
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        ) : type === "tag" ? (
+          <>
+            <ContextMenuItem
+              inset
+              onSelect={() => {
+                void runAction(`Checkout tag ${name}`, () => gitActions.checkoutRef({ ref: name }));
+              }}
+            >
+              Checkout
+            </ContextMenuItem>
+            <ContextMenuItem
+              inset
+              className="text-destructive"
+              onSelect={() => {
+                useActionsStore.getState().openConfirm({
+                  title: `Delete tag ${name}`,
+                  description: `Permanently delete tag \`${name}\`? This cannot be undone.`,
+                  typedConfirm: name,
+                  destructive: true,
+                  confirmLabel: "Delete tag",
+                  onConfirm: async () => {
+                    await runAction(`Delete tag ${name}`, () => gitActions.tagDelete({ name }));
+                  },
+                });
+              }}
+            >
+              Delete tag…
             </ContextMenuItem>
             <ContextMenuSeparator />
           </>
