@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { useMemo } from "react";
 import { CommitList } from "./components/CommitList/CommitList";
 import { PreferencesPanel } from "./components/PreferencesPanel/PreferencesPanel";
+import { FilterChips } from "./components/Search/FilterChips";
+import { FilterMenu } from "./components/Search/FilterMenu";
+import { RefFilter } from "./components/Search/RefFilter";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit";
 import { useConfigBridge } from "./hooks/useConfigBridge";
@@ -71,6 +74,8 @@ function GitGraphApp() {
         />
       )}
 
+      <FilterChips />
+
       {error && (
         <div className="bg-destructive/15 text-destructive p-4 rounded-md mb-4 shrink-0">
           Error: {error}
@@ -78,12 +83,14 @@ function GitGraphApp() {
       )}
 
       <div className="border rounded-md flex overflow-hidden grow">
+        <RefFilter />
         <div className="grow overflow-auto">
           <CommitList commits={rows} rowHeight={rowHeight} loading={loading} />
         </div>
       </div>
 
       <PreferencesPanel />
+      <FilterMenu />
     </div>
   );
 }
