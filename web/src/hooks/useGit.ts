@@ -115,10 +115,15 @@ export default function useGit() {
     }
   }, [appendPage, hasMore, nextCursor, loading, presetId, setCommitsLoading, topoOrder]);
 
+  const bootstrappedKeyRef = useRef<string>("");
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void bootstrap();
-    void loadRefs();
+    const repoId = useStore.getState().activeRepoId ?? "";
+    const key = `${repoId}::${presetId}`;
+    if (bootstrappedKeyRef.current !== key) {
+      bootstrappedKeyRef.current = key;
+      void bootstrap();
+      void loadRefs();
+    }
     let debounceHandle: ReturnType<typeof setTimeout> | null = null;
     const unsubscribe = useStore.subscribe((state, prev) => {
       const next = selectActiveFilters(state).apiFilter;
@@ -134,7 +139,7 @@ export default function useGit() {
       if (debounceHandle) clearTimeout(debounceHandle);
       unsubscribe();
     };
-  }, [bootstrap, fetchFirstPage, loadRefs]);
+  }, [bootstrap, fetchFirstPage, loadRefs, presetId]);
 
   return { loading, error, loadNextPage, refresh: bootstrap };
 }
