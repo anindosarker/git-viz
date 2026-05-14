@@ -1,23 +1,28 @@
-import { FolderGit2, GitBranch, RotateCw, Settings } from "lucide-react";
+import { GitBranch, RotateCw, Settings } from "lucide-react";
 import { useStore } from "../../state/store";
 import { Button } from "../ui/button";
+import { RepoSwitcher } from "./RepoSwitcher";
 
 interface TopBarProps {
   repo: string;
   branch: string;
   onRefresh: () => void;
+  onSwitchRepo: (id: string) => void;
   loading: boolean;
 }
 
-export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
+export function TopBar({ repo, branch, onRefresh, onSwitchRepo, loading }: TopBarProps) {
   const setPreferencesOpen = useStore((s) => s.setPreferencesOpen);
+  const repos = useStore((s) => s.repos);
+
   return (
     <div className="flex items-center justify-between bg-muted/40 p-2 border-b text-sm">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 font-medium">
-          <FolderGit2 className="h-4 w-4" />
-          <span>{repo}</span>
-        </div>
+        {repos.length > 0 ? (
+          <RepoSwitcher onSwitch={onSwitchRepo} />
+        ) : (
+          <div className="font-medium">{repo}</div>
+        )}
         <div className="text-muted-foreground">{">"}</div>
         <div className="flex items-center gap-2">
           <GitBranch className="h-4 w-4" />
