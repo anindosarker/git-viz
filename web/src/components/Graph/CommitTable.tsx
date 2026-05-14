@@ -8,6 +8,8 @@ import "@/graph/columns/graph.column";
 import "@/graph/columns/hash.column";
 import "@/graph/columns/refs.column";
 import "@/graph/columns/subject.column";
+import "@/graph/render/hybrid-canvas-compact";
+import "@/graph/render/hybrid-canvas-medium";
 import "@/graph/render/hybrid-canvas-wide";
 import type { GraphRow } from "@/graph";
 import type { ColumnConfig } from "@/graph/columns/types";
