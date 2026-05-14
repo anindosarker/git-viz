@@ -32,7 +32,7 @@ export default function useGit() {
   }, [appendPage, resetCommits, setCommitsLoading, setLoadingRefs, setRefs]);
 
   const loadNextPage = useCallback(async () => {
-    if (!hasMore || !nextCursor) return;
+    if (!hasMore || !nextCursor || loading) return;
     try {
       setCommitsLoading(true);
       const page = await gitService.getCommitsPage({ cursor: nextCursor });
@@ -42,7 +42,7 @@ export default function useGit() {
     } finally {
       setCommitsLoading(false);
     }
-  }, [appendPage, hasMore, nextCursor, setCommitsLoading]);
+  }, [appendPage, hasMore, nextCursor, loading, setCommitsLoading]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
