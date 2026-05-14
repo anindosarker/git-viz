@@ -4,7 +4,7 @@ out
 web/dist
 backend/dist
 shared/dist
-.ai/reference
+.ai
 *.lock
 pnpm-lock.yaml
 package-lock.json
