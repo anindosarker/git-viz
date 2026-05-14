@@ -2,6 +2,9 @@ import { CommitDetails } from "@/components/CommitDetails/CommitDetails";
 import { DiffViewer } from "@/components/DiffViewer/DiffViewer";
 import { CommitTable } from "@/components/Graph/CommitTable";
 import { PreferencesPanel } from "@/components/PreferencesPanel/PreferencesPanel";
+import { FilterChips } from "@/components/Search/FilterChips";
+import { FilterMenu } from "@/components/Search/FilterMenu";
+import { RefFilter } from "@/components/Search/RefFilter";
 import { TopBar } from "@/components/TopBar/TopBar";
 import "@/graph/columns/author.column";
 import "@/graph/columns/graph.column";
@@ -43,19 +46,25 @@ function GitGraphApp() {
         />
       )}
 
+      <FilterChips />
+
       {error && (
         <div className="bg-destructive/15 text-destructive p-4 m-4 rounded-md">Error: {error}</div>
       )}
 
       <div className="grow overflow-hidden border-t flex flex-col min-h-0">
-        <div className="grow overflow-hidden min-h-0">
-          <CommitTable rows={rows} loading={loading} onEndReached={() => void loadNextPage()} />
+        <div className="grow overflow-hidden min-h-0 flex">
+          <RefFilter />
+          <div className="grow overflow-hidden min-h-0">
+            <CommitTable rows={rows} loading={loading} onEndReached={() => void loadNextPage()} />
+          </div>
         </div>
         <CommitDetails />
       </div>
 
       <PreferencesPanel />
       <DiffViewer />
+      <FilterMenu />
     </div>
   );
 }

@@ -17,6 +17,13 @@ export interface PersistedState {
   rowHeight?: number;
   columns?: unknown;
   detailsHeight?: number;
+  query?: string;
+  queryRegex?: boolean;
+  author?: string | null;
+  since?: string | null;
+  until?: string | null;
+  paths?: string[];
+  refScope?: string[];
 }
 
 export interface PersistAdapter {

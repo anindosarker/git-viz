@@ -1,7 +1,12 @@
 import type { ColumnConfig, ColumnId } from "@/graph/columns/types";
 import { getPreset } from "@/graph/presets/registry";
 import type { RefDisplay } from "@/graph/presets/types";
-import type { CommitsGetPageResponse, GitCommitSummary, GitRefsSnapshot } from "@git-viz/shared";
+import type {
+  CommitFilter,
+  CommitsGetPageResponse,
+  GitCommitSummary,
+  GitRefsSnapshot,
+} from "@git-viz/shared";
 import { create } from "zustand";
 import { debounce, getPersistAdapter, type PersistedState } from "./persist";
 
@@ -67,9 +72,34 @@ interface UISlice {
   diffViewer?: { hash: string; path: string };
   openDiffViewer: (hash: string, path: string) => void;
   closeDiffViewer: () => void;
+  filterMenuOpen: boolean;
+  setFilterMenuOpen: (open: boolean) => void;
+  refPanelOpen: boolean;
+  setRefPanelOpen: (open: boolean) => void;
 }
 
-export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice;
+interface FilterSlice {
+  query: string;
+  queryRegex: boolean;
+  author: string | null;
+  since: string | null;
+  until: string | null;
+  paths: string[];
+  hash: string | null;
+  refScope: string[];
+  setQuery: (q: string) => void;
+  setQueryRegex: (v: boolean) => void;
+  setAuthor: (v: string | null) => void;
+  setSince: (v: string | null) => void;
+  setUntil: (v: string | null) => void;
+  setPaths: (v: string[]) => void;
+  setHash: (v: string | null) => void;
+  setRefScope: (v: string[]) => void;
+  toggleRefScope: (refName: string) => void;
+  clearFilters: () => void;
+}
+
+export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice & FilterSlice;
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: "graph", visible: true, width: "flex" },
@@ -188,7 +218,68 @@ export const useStore = create<Store>()((set) => ({
   diffViewer: undefined,
   openDiffViewer: (hash, path) => set({ diffViewer: { hash, path } }),
   closeDiffViewer: () => set({ diffViewer: undefined }),
+  filterMenuOpen: false,
+  setFilterMenuOpen: (filterMenuOpen) => set({ filterMenuOpen }),
+  refPanelOpen: false,
+  setRefPanelOpen: (refPanelOpen) => set({ refPanelOpen }),
+
+  query: initial.query ?? "",
+  queryRegex: initial.queryRegex ?? false,
+  author: initial.author ?? null,
+  since: initial.since ?? null,
+  until: initial.until ?? null,
+  paths: initial.paths ?? [],
+  hash: null,
+  refScope: initial.refScope ?? [],
+  setQuery: (query) => set({ query }),
+  setQueryRegex: (queryRegex) => set({ queryRegex }),
+  setAuthor: (author) => set({ author }),
+  setSince: (since) => set({ since }),
+  setUntil: (until) => set({ until }),
+  setPaths: (paths) => set({ paths }),
+  setHash: (hash) => set({ hash }),
+  setRefScope: (refScope) => set({ refScope }),
+  toggleRefScope: (refName) =>
+    set((state) => {
+      const idx = state.refScope.indexOf(refName);
+      if (idx === -1) return { refScope: [...state.refScope, refName] };
+      const next = state.refScope.slice();
+      next.splice(idx, 1);
+      return { refScope: next };
+    }),
+  clearFilters: () =>
+    set({
+      query: "",
+      queryRegex: false,
+      author: null,
+      since: null,
+      until: null,
+      paths: [],
+      hash: null,
+      refScope: [],
+    }),
 }));
+
+export function selectActiveFilters(state: Store): {
+  hasActiveFilters: boolean;
+  apiFilter: CommitFilter;
+} {
+  const filter: CommitFilter = {};
+  if (state.query) {
+    filter.query = state.query;
+    if (state.queryRegex) filter.queryRegex = true;
+  }
+  if (state.author) filter.author = state.author;
+  if (state.since) filter.since = state.since;
+  if (state.until) filter.until = state.until;
+  if (state.paths.length > 0) filter.paths = state.paths;
+  if (state.refScope.length > 0) filter.refs = state.refScope;
+  if (state.hash) filter.hash = state.hash;
+  return {
+    apiFilter: filter,
+    hasActiveFilters: Object.keys(filter).length > 0,
+  };
+}
 
 const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "selectedHash",
@@ -198,6 +289,13 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "rowHeight",
   "columns",
   "detailsHeight",
+  "query",
+  "queryRegex",
+  "author",
+  "since",
+  "until",
+  "paths",
+  "refScope",
 ];
 
 const flush = debounce((state: Store) => {

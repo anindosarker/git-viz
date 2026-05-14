@@ -1,13 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
-import { gitService } from "../services/git.service";
-import { useStore } from "../state/store";
 import { getPreset } from "@/graph";
+import type { CommitFilter } from "@git-viz/shared";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { gitService } from "../services/git.service";
+import { selectActiveFilters, useStore } from "../state/store";
 
 function resolveOrder(presetId: string, topoOrder: boolean): "topo" | "date" {
   if (topoOrder) return "topo";
   const preset = getPreset(presetId as never);
   if (preset?.algorithmId === "gitlens-topo") return "topo";
   return "date";
+}
+
+function shallowEqualFilter(a: CommitFilter, b: CommitFilter): boolean {
+  const ak = Object.keys(a);
+  const bk = Object.keys(b);
+  if (ak.length !== bk.length) return false;
+  for (const k of ak) {
+    const av = (a as Record<string, unknown>)[k];
+    const bv = (b as Record<string, unknown>)[k];
+    if (Array.isArray(av) && Array.isArray(bv)) {
+      if (av.length !== bv.length) return false;
+      for (let i = 0; i < av.length; i++) if (av[i] !== bv[i]) return false;
+    } else if (av !== bv) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export default function useGit() {
@@ -23,31 +41,72 @@ export default function useGit() {
   const topoOrder = useStore((s) => s.topoOrder);
 
   const [error, setError] = useState<string | null>(null);
+  const currentFilterRef = useRef<CommitFilter>({});
+  const reqIdRef = useRef(0);
+
+  const fetchFirstPage = useCallback(
+    async (filter: CommitFilter) => {
+      const reqId = ++reqIdRef.current;
+      currentFilterRef.current = filter;
+      try {
+        setError(null);
+        setCommitsLoading(true);
+        resetCommits();
+        const order = resolveOrder(presetId, topoOrder);
+        const hasFilter = Object.keys(filter).length > 0;
+        if (hasFilter) {
+          const page = await gitService.getCommitsPage({ filter, order });
+          if (reqId !== reqIdRef.current) return;
+          appendPage(page);
+        } else {
+          const data = await gitService.bootstrap({ order });
+          if (reqId !== reqIdRef.current) return;
+          setRefs(data.refs);
+          appendPage(data.firstPage);
+        }
+      } catch (e) {
+        if (reqId !== reqIdRef.current) return;
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (reqId === reqIdRef.current) setCommitsLoading(false);
+      }
+    },
+    [appendPage, presetId, resetCommits, setCommitsLoading, setRefs, topoOrder]
+  );
 
   const bootstrap = useCallback(async () => {
     try {
       setError(null);
-      setCommitsLoading(true);
       setLoadingRefs(true);
-      resetCommits();
-      const order = resolveOrder(presetId, topoOrder);
-      const data = await gitService.bootstrap({ order });
-      setRefs(data.refs);
-      appendPage(data.firstPage);
+    } finally {
+      setLoadingRefs(false);
+    }
+    await fetchFirstPage(selectActiveFilters(useStore.getState()).apiFilter);
+  }, [fetchFirstPage, setLoadingRefs]);
+
+  const loadRefs = useCallback(async () => {
+    try {
+      setLoadingRefs(true);
+      const refs = await gitService.getRefs();
+      setRefs(refs);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setCommitsLoading(false);
       setLoadingRefs(false);
     }
-  }, [appendPage, presetId, resetCommits, setCommitsLoading, setLoadingRefs, setRefs, topoOrder]);
+  }, [setLoadingRefs, setRefs]);
 
   const loadNextPage = useCallback(async () => {
     if (!hasMore || !nextCursor || loading) return;
     try {
       setCommitsLoading(true);
       const order = resolveOrder(presetId, topoOrder);
-      const page = await gitService.getCommitsPage({ cursor: nextCursor, order });
+      const filter = currentFilterRef.current;
+      const page = await gitService.getCommitsPage({
+        cursor: nextCursor,
+        order,
+        filter: Object.keys(filter).length > 0 ? filter : undefined,
+      });
       appendPage(page);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -59,7 +118,23 @@ export default function useGit() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void bootstrap();
-  }, [bootstrap]);
+    void loadRefs();
+    let debounceHandle: ReturnType<typeof setTimeout> | null = null;
+    const unsubscribe = useStore.subscribe((state, prev) => {
+      const next = selectActiveFilters(state).apiFilter;
+      const previous = selectActiveFilters(prev).apiFilter;
+      if (shallowEqualFilter(next, previous)) return;
+      if (debounceHandle) clearTimeout(debounceHandle);
+      debounceHandle = setTimeout(() => {
+        debounceHandle = null;
+        void fetchFirstPage(next);
+      }, 300);
+    });
+    return () => {
+      if (debounceHandle) clearTimeout(debounceHandle);
+      unsubscribe();
+    };
+  }, [bootstrap, fetchFirstPage, loadRefs]);
 
   return { loading, error, loadNextPage, refresh: bootstrap };
 }
