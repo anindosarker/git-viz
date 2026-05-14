@@ -92,9 +92,11 @@ function compute(input: ComputeInput): ComputeResult {
     const nodeColumn = inputIndex !== -1 ? inputIndex : inputSwimlanes.length;
 
     const commitRow: CommitRow = { ...toCommitRow(commit), color: commitColor };
+    // Preserve any commit-level kind hint (e.g. "stash") from the input.
+    const inputKind = (commit as Partial<CommitRow>).kind;
 
     rows.push({
-      kind: "node",
+      kind: inputKind ?? "node",
       commit: commitRow,
       inputSwimlanes,
       outputSwimlanes,

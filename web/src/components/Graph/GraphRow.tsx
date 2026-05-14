@@ -10,6 +10,7 @@ interface GraphRowProps {
 
 export const GraphRow: React.FC<GraphRowProps> = ({ row, rowHeight, totalHeight, laneWidth }) => {
   const { commit, inputSwimlanes, outputSwimlanes } = row;
+  const isStash = row.kind === "stash";
 
   // Dimensions
   const R = 5; // Curve radius
@@ -201,11 +202,27 @@ export const GraphRow: React.FC<GraphRowProps> = ({ row, rowHeight, totalHeight,
     <g className="graph-row">
       {paths}
 
-      {/* Background circle with branch color */}
-      <circle cx={cx} cy={cy} r={8} fill={circleColor} />
+      {/* Background circle with branch color (dashed for stash entries) */}
+      {isStash ? (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={8}
+          fill="none"
+          stroke={circleColor}
+          strokeWidth={1.5}
+          strokeDasharray="2 2"
+        />
+      ) : (
+        <circle cx={cx} cy={cy} r={8} fill={circleColor} />
+      )}
 
-      {/* Avatar or Initials */}
-      {commit.authorAvatar ? (
+      {/* Avatar or Initials (or stash icon) */}
+      {isStash ? (
+        <text x={cx} y={cy + 0.5} textAnchor="middle" dominantBaseline="central" fontSize="9">
+          💾
+        </text>
+      ) : commit.authorAvatar ? (
         <>
           {/* Clip path for circular avatar */}
           <defs>
