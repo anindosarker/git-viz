@@ -6,13 +6,23 @@
     "./GitExecutor": "./dist/git/GitExecutor.js",
     "./GitLogService": "./dist/git/GitLogService.js",
     "./GitBranchService": "./dist/git/GitBranchService.js",
-    "./GitRepoService": "./dist/git/GitRepoService.js"
+    "./GitRepoService": "./dist/git/GitRepoService.js",
+    "./GitTagService": "./dist/git/GitTagService.js",
+    "./GitStashService": "./dist/git/GitStashService.js",
+    "./GitRemoteService": "./dist/git/GitRemoteService.js",
+    "./GitRefService": "./dist/git/GitRefService.js",
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.js"
   },
   "typesIndices": {
     "./GitExecutor": "./dist/git/GitExecutor.d.ts",
     "./GitLogService": "./dist/git/GitLogService.d.ts",
     "./GitBranchService": "./dist/git/GitBranchService.d.ts",
-    "./GitRepoService": "./dist/git/GitRepoService.d.ts"
+    "./GitRepoService": "./dist/git/GitRepoService.d.ts",
+    "./GitTagService": "./dist/git/GitTagService.d.ts",
+    "./GitStashService": "./dist/git/GitStashService.d.ts",
+    "./GitRemoteService": "./dist/git/GitRemoteService.d.ts",
+    "./GitRefService": "./dist/git/GitRefService.d.ts",
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts"
   },
   "scripts": {
     "build": "tsc"
