@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { CommitList } from "./components/CommitList/CommitList";
 import { TopBar } from "./components/TopBar/TopBar";
-import useGit from "./hooks/useGit.hook";
+import useGit from "./hooks/useGit";
 import { gitService } from "./services/git.service";
 
 const queryClient = new QueryClient();
