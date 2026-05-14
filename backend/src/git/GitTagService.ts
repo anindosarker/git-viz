@@ -22,15 +22,15 @@ export class GitTagService {
     ]);
 
     const raw = buf.toString("utf8");
-    if (!raw.trim()) return [];
+    if (!raw.trim()) {return [];}
 
     const tags: GitTag[] = [];
 
     for (const line of raw.split("\n")) {
-      if (!line) continue;
+      if (!line) {continue;}
       const [name, objectName, peeled, subject, taggerDate] =
         line.split(FIELD_SEP);
-      if (!name || !objectName) continue;
+      if (!name || !objectName) {continue;}
 
       const annotated = !!peeled;
       const tag: GitTag = {
@@ -38,8 +38,8 @@ export class GitTagService {
         target: annotated ? peeled : objectName,
         annotated,
       };
-      if (annotated && subject) tag.message = subject;
-      if (annotated && taggerDate) tag.taggerDate = taggerDate;
+      if (annotated && subject) {tag.message = subject;}
+      if (annotated && taggerDate) {tag.taggerDate = taggerDate;}
       tags.push(tag);
     }
 

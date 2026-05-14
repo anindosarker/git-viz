@@ -63,12 +63,12 @@ export class GitExecutor {
       });
 
       child.on("error", (err) => {
-        if (killed) return;
+        if (killed) {return;}
         reject(err);
       });
 
       child.on("close", (code) => {
-        if (killed) return;
+        if (killed) {return;}
         if (code === 0 || options.ignoreErrors) {
           resolve(Buffer.concat(stdoutChunks));
         } else {
