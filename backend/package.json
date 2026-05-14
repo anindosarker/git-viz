@@ -25,13 +25,16 @@
     "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@git-viz/shared": "1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "typescript": "^5.0.0",
-    "@types/node": "^22.0.0"
+    "vitest": "^4.1.6"
   }
 }
