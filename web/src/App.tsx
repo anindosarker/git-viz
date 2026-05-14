@@ -1,3 +1,5 @@
+import { CommitDetails } from "@/components/CommitDetails/CommitDetails";
+import { DiffViewer } from "@/components/DiffViewer/DiffViewer";
 import { CommitTable } from "@/components/Graph/CommitTable";
 import { PreferencesPanel } from "@/components/PreferencesPanel/PreferencesPanel";
 import { TopBar } from "@/components/TopBar/TopBar";
@@ -45,11 +47,15 @@ function GitGraphApp() {
         <div className="bg-destructive/15 text-destructive p-4 m-4 rounded-md">Error: {error}</div>
       )}
 
-      <div className="grow overflow-hidden border-t">
-        <CommitTable rows={rows} loading={loading} onEndReached={() => void loadNextPage()} />
+      <div className="grow overflow-hidden border-t flex flex-col min-h-0">
+        <div className="grow overflow-hidden min-h-0">
+          <CommitTable rows={rows} loading={loading} onEndReached={() => void loadNextPage()} />
+        </div>
+        <CommitDetails />
       </div>
 
       <PreferencesPanel />
+      <DiffViewer />
     </div>
   );
 }

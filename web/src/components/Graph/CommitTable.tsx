@@ -1,3 +1,4 @@
+import { CommitContextMenu } from "@/components/CommitList/CommitContextMenu";
 import { CommitGraph } from "@/components/Graph/CommitGraph";
 import { columnRegistry, getColumn, getRenderer } from "@/graph";
 import "@/graph/columns/author.column";
@@ -171,36 +172,38 @@ export const CommitTable: React.FC<CommitTableProps> = ({
           const row = rows[vi.index];
           const isSelected = row.commit.hash === selectedHash;
           return (
-            <div
-              key={row.commit.hash}
-              className={
-                "absolute left-0 right-0 hover:bg-muted/40 cursor-pointer " +
-                (isSelected ? "bg-muted/60" : "")
-              }
-              style={{
-                top: vi.start,
-                height: vi.size,
-                display: "grid",
-                gridTemplateColumns: effectiveGridTemplate,
-                alignItems: "center",
-              }}
-              onClick={() => handleSelect(row.commit.hash)}
-            >
-              {visibleColumns.map(({ config, def }) => {
-                if (def.id === "graph") {
-                  return <div key={def.id} className="h-full" />;
+            <CommitContextMenu key={row.commit.hash} commit={row.commit}>
+              <div
+                className={
+                  "absolute left-0 right-0 hover:bg-muted/40 cursor-pointer " +
+                  (isSelected ? "bg-muted/60" : "")
                 }
-                const ColumnComp = def.Component;
-                return (
-                  <div key={def.id} className="px-2 overflow-hidden text-sm">
-                    <ColumnComp
-                      row={row}
-                      context={{ refsInline: !!config.refsInline, ...config }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+                style={{
+                  top: vi.start,
+                  height: vi.size,
+                  display: "grid",
+                  gridTemplateColumns: effectiveGridTemplate,
+                  alignItems: "center",
+                }}
+                onClick={() => handleSelect(row.commit.hash)}
+                data-testid="commit-row"
+              >
+                {visibleColumns.map(({ config, def }) => {
+                  if (def.id === "graph") {
+                    return <div key={def.id} className="h-full" />;
+                  }
+                  const ColumnComp = def.Component;
+                  return (
+                    <div key={def.id} className="px-2 overflow-hidden text-sm">
+                      <ColumnComp
+                        row={row}
+                        context={{ refsInline: !!config.refsInline, ...config }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </CommitContextMenu>
           );
         })}
       </div>

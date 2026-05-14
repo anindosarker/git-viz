@@ -5,6 +5,7 @@ import { GitLogHandler } from "./handlers/GitLogHandler";
 import { SystemHandler } from "./handlers/SystemHandler";
 import { commitsHandlers } from "./handlers/commits.handler";
 import { makeConfigHandlers } from "./handlers/config.handler";
+import { diffHandlers } from "./handlers/diff.handler";
 import { refsHandlers } from "./handlers/refs.handler";
 import { remotesHandlers } from "./handlers/remotes.handler";
 import { repoHandlers } from "./handlers/repo.handler";
@@ -31,6 +32,7 @@ export class WebviewMessageHandler {
       ...commitsHandlers,
       ...refsHandlers,
       ...remotesHandlers,
+      ...diffHandlers,
       ...configHandlers,
     ]) {
       this._registry.set(h.command, h);

@@ -47,8 +47,10 @@ export function useKeyboardNav(): void {
           moveBy(-1);
           break;
         case "Enter":
-          // commit details panel (Plan 5b). For now just ensure something is selected.
+          // Open commit details: select first if nothing is selected; otherwise
+          // selectedHash is already driving the drawer (no-op).
           if (currentIdx === -1 && commits.length > 0) {
+            e.preventDefault();
             store.select(commits[0].hash);
           }
           break;
