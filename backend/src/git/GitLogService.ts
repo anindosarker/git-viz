@@ -50,7 +50,7 @@ export class GitLogService {
         args.push("--all");
         // Include stash refs in traversal so stash entries appear in the graph
         // as dashed side-branches (rendered with `kind: 'stash'` rows).
-        args.push("--stash");
+        args.push("--glob=refs/stash");
       }
     } else {
       // Filter-supplied refs anchor traversal. Combine with cursor by limiting
