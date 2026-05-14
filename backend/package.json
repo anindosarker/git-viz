@@ -11,7 +11,10 @@
     "./GitStashService": "./dist/git/GitStashService.js",
     "./GitRemoteService": "./dist/git/GitRemoteService.js",
     "./GitRefService": "./dist/git/GitRefService.js",
-    "./GitBootstrapService": "./dist/git/GitBootstrapService.js"
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.js",
+    "./GitSubmoduleService": "./dist/git/GitSubmoduleService.js",
+    "./GitWorktreeService": "./dist/git/GitWorktreeService.js",
+    "./GitWatcher": "./dist/git/GitWatcher.js"
   },
   "typesIndices": {
     "./GitExecutor": "./dist/git/GitExecutor.d.ts",
@@ -22,7 +25,10 @@
     "./GitStashService": "./dist/git/GitStashService.d.ts",
     "./GitRemoteService": "./dist/git/GitRemoteService.d.ts",
     "./GitRefService": "./dist/git/GitRefService.d.ts",
-    "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts"
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts",
+    "./GitSubmoduleService": "./dist/git/GitSubmoduleService.d.ts",
+    "./GitWorktreeService": "./dist/git/GitWorktreeService.d.ts",
+    "./GitWatcher": "./dist/git/GitWatcher.d.ts"
   },
   "scripts": {
     "build": "tsc -b",
@@ -32,7 +38,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@git-viz/shared": "workspace:*"
+    "@git-viz/shared": "workspace:*",
+    "chokidar": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
