@@ -33,6 +33,7 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
     return result.laneCount * 20 + 40;
   }, [commits, rowHeight]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: commits,
     columns,

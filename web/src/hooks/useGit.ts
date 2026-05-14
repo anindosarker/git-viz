@@ -45,6 +45,7 @@ export default function useGit() {
   }, [appendPage, hasMore, nextCursor, setCommitsLoading]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void bootstrap();
   }, [bootstrap]);
 

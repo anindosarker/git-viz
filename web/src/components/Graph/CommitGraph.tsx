@@ -25,14 +25,15 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
   }, [commits, rowHeight, laneWidth]);
 
   const rowPositions = useMemo(() => {
-    let currentY = 0;
-    return rows.map((row) => {
-      const isExpanded = (expandedRows as Record<string, boolean>)[row.commit.hash];
-      const y = currentY;
+    const expandedMap = expandedRows as Record<string, boolean>;
+    return rows.reduce<{ y: number; height: number; isExpanded: boolean }[]>((acc, row) => {
+      const prev = acc[acc.length - 1];
+      const y = prev ? prev.y + prev.height : 0;
+      const isExpanded = expandedMap[row.commit.hash];
       const height = rowHeight + (isExpanded ? detailHeight : 0);
-      currentY += height;
-      return { y, height, isExpanded };
-    });
+      acc.push({ y, height, isExpanded });
+      return acc;
+    }, []);
   }, [rows, expandedRows, rowHeight, detailHeight]);
 
   const totalHeight =
