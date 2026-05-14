@@ -1,4 +1,5 @@
 import type { GitFileChange, GitRefPointer } from "@git-viz/shared";
+import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
 import { useCommitDetails } from "../../hooks/useCommitDetails";
 import { getVsCodeApi } from "../../services/vscodeApi";
@@ -105,33 +106,45 @@ export const CommitDetails: React.FC = () => {
     [selectedHash, openDiffViewer]
   );
 
-  if (!commit || !selectedHash) return null;
+  const visible = Boolean(commit && selectedHash);
 
   return (
-    <div
-      className="shrink-0 border-t bg-background flex flex-col relative"
-      style={{ height }}
-      data-testid="commit-details-drawer"
-    >
-      <div
-        role="separator"
-        aria-orientation="horizontal"
-        onMouseDown={onResizeStart}
-        className="absolute top-0 left-0 right-0 h-1 -mt-0.5 cursor-row-resize hover:bg-primary/40 z-10"
-        title="Drag to resize"
-      />
-      <CommitHeader commit={commit} body={state?.details?.body} onClose={() => select(undefined)} />
-      <CommitMeta commit={commit} details={state?.details} refs={refsForCommit} />
-      <div className="overflow-auto shrink-0">
-        <CommitBody body={state?.details?.body} loading={state?.detailsLoading} />
-      </div>
-      <FileChangeList
-        files={state?.files}
-        truncated={state?.filesTruncated ?? false}
-        loading={state?.filesLoading ?? false}
-        error={state?.filesError}
-        onOpenFile={onOpenFile}
-      />
-    </div>
+    <AnimatePresence>
+      {visible && commit && (
+        <motion.div
+          className="shrink-0 border-t bg-background flex flex-col relative"
+          style={{ height }}
+          data-testid="commit-details-drawer"
+          initial={{ y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 24, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            onMouseDown={onResizeStart}
+            className="absolute top-0 left-0 right-0 h-1 -mt-0.5 cursor-row-resize hover:bg-primary/40 z-10"
+            title="Drag to resize"
+          />
+          <CommitHeader
+            commit={commit}
+            body={state?.details?.body}
+            onClose={() => select(undefined)}
+          />
+          <CommitMeta commit={commit} details={state?.details} refs={refsForCommit} />
+          <div className="overflow-auto shrink-0">
+            <CommitBody body={state?.details?.body} loading={state?.detailsLoading} />
+          </div>
+          <FileChangeList
+            files={state?.files}
+            truncated={state?.filesTruncated ?? false}
+            loading={state?.filesLoading ?? false}
+            error={state?.filesError}
+            onOpenFile={onOpenFile}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
