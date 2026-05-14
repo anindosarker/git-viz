@@ -1,7 +1,16 @@
 import * as vscode from "vscode";
+import { ConfigBridge } from "../settings/ConfigBridge";
 import { getNonce } from "../utilities/getNonce";
 import { getUri } from "../utilities/getUri";
 import { WebviewMessageHandler } from "./WebviewMessageHandler";
+
+export const MAIN_PANEL_VIEW_TYPE = "git-viz.commitGraph";
+
+export interface OpenGraphArgs {
+  kind?: "branch" | "tag" | "head" | "stash" | "commit";
+  name?: string;
+  hash?: string;
+}
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -23,9 +32,13 @@ export class MainPanel {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+    configBridge?: ConfigBridge
+  ) {
     this._panel = panel;
-    this._messageHandler = new WebviewMessageHandler(this._panel.webview);
+    this._messageHandler = new WebviewMessageHandler(this._panel.webview, configBridge);
 
     // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
     // the panel or when the panel is closed programmatically)
@@ -36,6 +49,26 @@ export class MainPanel {
 
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
+
+    if (configBridge) {
+      const detach = configBridge.attach(this._panel.webview);
+      this._disposables.push(detach);
+    }
+
+    // Forward color theme changes to the webview so it can re-read CSS vars
+    this._disposables.push(
+      vscode.window.onDidChangeActiveColorTheme((theme) => {
+        void this._panel.webview.postMessage({
+          command: "theme:changed",
+          kind:
+            theme.kind === vscode.ColorThemeKind.Light
+              ? "light"
+              : theme.kind === vscode.ColorThemeKind.HighContrast
+                ? "high-contrast"
+                : "dark",
+        });
+      })
+    );
   }
 
   /**
@@ -44,10 +77,15 @@ export class MainPanel {
    *
    * @param extensionUri The URI of the directory containing the extension
    */
-  public static render(extensionUri: vscode.Uri) {
+  public static render(
+    extensionUri: vscode.Uri,
+    configBridge?: ConfigBridge,
+    openArgs?: OpenGraphArgs
+  ) {
     if (MainPanel.currentPanel) {
       // If the webview panel already exists reveal it
       MainPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
+      if (openArgs) MainPanel.currentPanel.postOpenArgs(openArgs);
     } else {
       // If a webview panel does not already exist create and show a new one
       let repoName = "git-viz";
@@ -56,17 +94,12 @@ export class MainPanel {
       }
 
       const panel = vscode.window.createWebviewPanel(
-        // Panel view type
-        "showHelloWorld",
-        // Panel title
+        MAIN_PANEL_VIEW_TYPE,
         `Commit Graph: ${repoName}`,
-        // The editor column the panel should be displayed in
         vscode.ViewColumn.One,
-        // Extra panel configurations
         {
-          // Enable JavaScript in the webview
           enableScripts: true,
-          // Restrict the webview to only load resources from the `out` and `web/dist` directories
+          retainContextWhenHidden: true,
           localResourceRoots: [
             vscode.Uri.joinPath(extensionUri, "out"),
             vscode.Uri.joinPath(extensionUri, "web", "dist"),
@@ -75,8 +108,17 @@ export class MainPanel {
       );
       panel.iconPath = vscode.Uri.joinPath(extensionUri, "icon.png");
 
-      MainPanel.currentPanel = new MainPanel(panel, extensionUri);
+      MainPanel.currentPanel = new MainPanel(panel, extensionUri, configBridge);
+      if (openArgs) MainPanel.currentPanel.postOpenArgs(openArgs);
     }
+  }
+
+  private postOpenArgs(args: OpenGraphArgs): void {
+    void this._panel.webview.postMessage({ command: "graph:open", args });
+  }
+
+  public postRefresh(): void {
+    void this._panel.webview.postMessage({ command: "graph:refresh" });
   }
 
   /**
