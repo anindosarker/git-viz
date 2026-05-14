@@ -1,0 +1,11 @@
+{
+  "enabledPlugins": {
+    "neon-postgres@neon": true,
+    "context7@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "expo-app-design@expo-plugins": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "context-mode@context-mode": true
+  }
+}
