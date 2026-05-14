@@ -20,19 +20,27 @@ export class GitService {
   }
 
   /**
-   * Gets repository information (name and current branch).
+   * Gets repository information in the legacy `{ repo, branch }` shape used by
+   * the existing webview frontend. New code should call
+   * `GitRepoService.getRepoInfo` directly for the full `GitRepoInfo`.
    */
   public static async getRepoInfo(
     cwd: string
   ): Promise<{ repo: string; branch: string }> {
-    return GitRepoService.getRepoInfo(cwd);
+    const info = await GitRepoService.getRepoInfo(cwd);
+    const branch = info.head.detached
+      ? `(detached ${info.head.shortHash})`
+      : info.head.branch ?? "";
+    return { repo: info.name, branch };
   }
 
   /**
-   * Fetches the git log for the given repository.
+   * Legacy log fetch: returns the first page of commits as a flat array.
+   * New code should use the paged `commits:getPage` endpoint.
    */
   public static async getLog(cwd: string): Promise<GitCommit[]> {
-    return GitLogService.getLog(cwd);
+    const page = await GitLogService.getCommitsPage(cwd, undefined, 500);
+    return page.commits;
   }
 
   /**
