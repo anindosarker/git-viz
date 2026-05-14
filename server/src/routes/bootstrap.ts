@@ -1,0 +1,27 @@
+import { Router, type Request, type Response, type RequestHandler } from "express";
+import { GitBootstrapService } from "@git-viz/backend/GitBootstrapService";
+
+function wrap(handler: (req: Request, res: Response) => Promise<unknown>): RequestHandler {
+  return async (req, res, next) => {
+    try {
+      await handler(req, res);
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
+export function bootstrapRoutes(repoPath: string): Router {
+  const r = Router();
+
+  r.get(
+    "/bootstrap",
+    wrap(async (req, res) => {
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
+      const data = await GitBootstrapService.get(repoPath, limit);
+      res.json(data);
+    })
+  );
+
+  return r;
+}
