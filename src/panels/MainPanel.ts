@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
+import { GitRepoService } from "@git-viz/backend/GitRepoService";
 import { ConfigBridge } from "../settings/ConfigBridge";
+import { VSCodeWatcher } from "../git/VSCodeWatcher";
 import { getNonce } from "../utilities/getNonce";
 import { getUri } from "../utilities/getUri";
 import { WebviewMessageHandler } from "./WebviewMessageHandler";
@@ -25,6 +27,7 @@ export class MainPanel {
   private readonly _panel: vscode.WebviewPanel;
   private readonly _disposables: vscode.Disposable[] = [];
   private readonly _messageHandler: WebviewMessageHandler;
+  private readonly _watchers = new Map<string, VSCodeWatcher>();
 
   /**
    * The MainPanel class private constructor (called only from the render method).
@@ -54,6 +57,11 @@ export class MainPanel {
       const detach = configBridge.attach(this._panel.webview);
       this._disposables.push(detach);
     }
+
+    void this._startWatchers();
+    this._disposables.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => void this._startWatchers())
+    );
 
     // Forward color theme changes to the webview so it can re-read CSS vars
     this._disposables.push(
@@ -139,6 +147,11 @@ export class MainPanel {
   public dispose() {
     MainPanel.currentPanel = undefined;
 
+    for (const watcher of this._watchers.values()) {
+      void watcher.stop();
+    }
+    this._watchers.clear();
+
     // Dispose of the current webview panel
     this._panel.dispose();
 
@@ -147,6 +160,33 @@ export class MainPanel {
       const x = this._disposables.pop();
       if (x) {
         x.dispose();
+      }
+    }
+  }
+
+  private async _startWatchers(): Promise<void> {
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    const seen = new Set<string>();
+    for (const folder of folders) {
+      const root = await GitRepoService.getRepoRoot(folder.uri.fsPath);
+      if (!root) continue;
+      seen.add(root);
+      if (this._watchers.has(root)) continue;
+      const watcher = new VSCodeWatcher(root, (kinds) => {
+        void this._panel.webview.postMessage({
+          kind: "event",
+          name: "git:state-changed",
+          payload: { repoId: root, kinds },
+        });
+      });
+      watcher.start();
+      this._watchers.set(root, watcher);
+    }
+    // Tear down watchers for folders no longer in the workspace.
+    for (const [root, watcher] of this._watchers) {
+      if (!seen.has(root)) {
+        void watcher.stop();
+        this._watchers.delete(root);
       }
     }
   }

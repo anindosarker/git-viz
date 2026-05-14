@@ -1,5 +1,12 @@
 import * as vscode from "vscode";
-import type { GitBranch, GitRefsSnapshot, GitStash, GitTag } from "@git-viz/shared";
+import type {
+  GitBranch,
+  GitRefsSnapshot,
+  GitStash,
+  GitSubmodule,
+  GitTag,
+  GitWorktree,
+} from "@git-viz/shared";
 
 export type TreeNode =
   | RepoNode
@@ -11,7 +18,11 @@ export type TreeNode =
   | StashesGroup
   | StashNode
   | RemotesGroup
-  | RemoteNode;
+  | RemoteNode
+  | SubmodulesGroup
+  | SubmoduleNode
+  | WorktreesGroup
+  | WorktreeNode;
 
 export class RepoNode extends vscode.TreeItem {
   readonly kind = "repo" as const;
@@ -166,5 +177,70 @@ export class RemoteNode extends vscode.TreeItem {
     super(remoteName, vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("cloud");
     this.contextValue = "git-viz.remote";
+  }
+}
+
+export class SubmodulesGroup extends vscode.TreeItem {
+  readonly kind = "submodulesGroup" as const;
+  constructor(
+    public readonly repoCwd: string,
+    public readonly submodules: GitSubmodule[]
+  ) {
+    super(`Submodules (${submodules.length})`, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("file-submodule");
+    this.contextValue = "git-viz.submodules";
+  }
+}
+
+export class SubmoduleNode extends vscode.TreeItem {
+  readonly kind = "submodule" as const;
+  constructor(
+    public readonly repoCwd: string,
+    public readonly submodule: GitSubmodule
+  ) {
+    super(submodule.path, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon(submodule.initialized ? "file-submodule" : "circle-slash");
+    this.contextValue = "git-viz.submodule";
+    this.description = submodule.hash.slice(0, 7);
+    this.tooltip = `${submodule.path}\nurl: ${submodule.url}\nhash: ${submodule.hash}`;
+    this.command = {
+      command: "git-viz.openSubmodule",
+      title: "Open Submodule",
+      arguments: [{ repoCwd, submodulePath: submodule.path }],
+    };
+  }
+}
+
+export class WorktreesGroup extends vscode.TreeItem {
+  readonly kind = "worktreesGroup" as const;
+  constructor(
+    public readonly repoCwd: string,
+    public readonly worktrees: GitWorktree[]
+  ) {
+    super(`Worktrees (${worktrees.length})`, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("source-control");
+    this.contextValue = "git-viz.worktrees";
+  }
+}
+
+export class WorktreeNode extends vscode.TreeItem {
+  readonly kind = "worktree" as const;
+  constructor(
+    public readonly repoCwd: string,
+    public readonly worktree: GitWorktree
+  ) {
+    const label = worktree.branch ?? worktree.head.slice(0, 7) ?? worktree.path;
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.description = worktree.path;
+    this.iconPath = new vscode.ThemeIcon(
+      worktree.bare ? "package" : worktree.locked ? "lock" : "source-control"
+    );
+    this.contextValue = "git-viz.worktree";
+    this.tooltip = `${worktree.path}\nHEAD: ${worktree.head}${worktree.branch ? `\nbranch: ${worktree.branch}` : ""}`;
+    this.command = {
+      command: "git-viz.openWorktree",
+      title: "Open Worktree",
+      arguments: [{ path: worktree.path }],
+    };
   }
 }

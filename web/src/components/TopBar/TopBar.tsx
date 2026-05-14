@@ -1,4 +1,5 @@
 import { SearchBar } from "@/components/Search/SearchBar";
+import { RepoSwitcher } from "@/components/TopBar/RepoSwitcher";
 import { Button } from "@/components/ui/button";
 import { presetRegistry } from "@/graph";
 import "@/graph/presets/git-graph-like";
@@ -25,10 +26,11 @@ interface TopBarProps {
   repo: string;
   branch: string;
   onRefresh: () => void;
+  onSwitchRepo: (id: string) => void;
   loading: boolean;
 }
 
-export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
+export function TopBar({ repo, branch, onRefresh, onSwitchRepo, loading }: TopBarProps) {
   const presetId = useStore((s) => s.presetId);
   const setPreset = useStore((s) => s.setPreset);
   const setPreferencesOpen = useStore((s) => s.setPreferencesOpen);
@@ -39,6 +41,7 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
   const hasActiveFilters = useStore((s) => selectActiveFilters(s).hasActiveFilters);
   const openModal = useActionsStore((s) => s.openModal);
   const openConfirm = useActionsStore((s) => s.openConfirm);
+  const repos = useStore((s) => s.repos);
   const [moreOpen, setMoreOpen] = React.useState(false);
 
   const fetchAll = () => runAction("Fetch all remotes", () => gitActions.remoteFetch({}));
@@ -56,10 +59,14 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
   return (
     <div className="flex items-center justify-between bg-muted/40 p-2 border-b text-sm gap-2">
       <div className="flex items-center gap-4 min-w-0">
-        <div className="flex items-center gap-2 font-medium truncate">
-          <FolderGit2 className="h-4 w-4" />
-          <span className="truncate">{repo}</span>
-        </div>
+        {repos.length > 0 ? (
+          <RepoSwitcher onSwitch={onSwitchRepo} />
+        ) : (
+          <div className="flex items-center gap-2 font-medium truncate">
+            <FolderGit2 className="h-4 w-4" />
+            <span className="truncate">{repo}</span>
+          </div>
+        )}
         <div className="text-muted-foreground">{">"}</div>
         <div className="flex items-center gap-2 truncate">
           <GitBranch className="h-4 w-4" />

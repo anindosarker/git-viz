@@ -1,15 +1,7 @@
 import { GitActionService } from "@git-viz/backend/GitActionService";
-import { Router, type Request, type Response, type RequestHandler } from "express";
-
-function wrap(handler: (req: Request, res: Response) => Promise<unknown>): RequestHandler {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res);
-    } catch (err) {
-      next(err);
-    }
-  };
-}
+import { Router } from "express";
+import type { RepoRegistry } from "../RepoRegistry";
+import { repoPathFor, wrap } from "./_helpers";
 
 type Runner = (cwd: string, payload: any) => Promise<unknown>;
 
@@ -43,13 +35,14 @@ const ROUTES: Record<string, Runner> = {
   "remote/rename": (cwd, p) => GitActionService.remoteRename(cwd, p),
 };
 
-export function actionsRoutes(repoPath: string): Router {
+export function actionsRoutes(registry: RepoRegistry): Router {
   const r = Router();
 
   for (const [path, runner] of Object.entries(ROUTES)) {
     r.post(
       `/actions/${path}`,
       wrap(async (req, res) => {
+        const repoPath = repoPathFor(req, registry);
         const data = await runner(repoPath, req.body ?? {});
         res.json(data);
       })

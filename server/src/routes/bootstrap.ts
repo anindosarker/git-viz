@@ -1,22 +1,15 @@
-import { Router, type Request, type Response, type RequestHandler } from "express";
+import { Router } from "express";
 import { GitBootstrapService } from "@git-viz/backend/GitBootstrapService";
+import type { RepoRegistry } from "../RepoRegistry";
+import { repoPathFor, wrap } from "./_helpers";
 
-function wrap(handler: (req: Request, res: Response) => Promise<unknown>): RequestHandler {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res);
-    } catch (err) {
-      next(err);
-    }
-  };
-}
-
-export function bootstrapRoutes(repoPath: string): Router {
+export function bootstrapRoutes(registry: RepoRegistry): Router {
   const r = Router();
 
   r.get(
     "/bootstrap",
     wrap(async (req, res) => {
+      const repoPath = repoPathFor(req, registry);
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
       const orderRaw = typeof req.query.order === "string" ? req.query.order : undefined;
       const order: "topo" | "date" | undefined =

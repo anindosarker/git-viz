@@ -146,7 +146,43 @@ export interface GitActionResult {
   exitCode: number;
 }
 
+// Multi-repo / submodule / worktree types
+
+export interface RepoSummary {
+  /** Stable identifier — absolute path to repo root. */
+  id: string;
+  name: string;
+  path: string;
+  hasUncommittedChanges: boolean;
+  currentBranch?: string;
+}
+
+export interface GitSubmodule {
+  name: string;
+  path: string;
+  hash: string;
+  url: string;
+  initialized: boolean;
+}
+
+export interface GitWorktree {
+  path: string;
+  head: string;
+  branch?: string;
+  bare: boolean;
+  detached: boolean;
+  locked: boolean;
+}
+
+// File watcher / hot reload types
+
+export type GitChangeKind = "head" | "refs" | "commits" | "workingTree" | "stashes";
+
 export interface GitStateChangedEvent {
-  kind: "git:state-changed";
-  kinds: Array<"refs" | "commits" | "head">;
+  kind: "event";
+  name: "git:state-changed";
+  payload: {
+    repoId: string;
+    kinds: GitChangeKind[];
+  };
 }

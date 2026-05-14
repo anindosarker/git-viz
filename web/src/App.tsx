@@ -13,25 +13,80 @@ import "@/graph/columns/subject.column";
 import "@/graph/render/hybrid-canvas-wide";
 import useGit from "@/hooks/useGit";
 import { useConfigBridge } from "@/hooks/useConfigBridge";
+import { useGitEvents } from "@/hooks/useGitEvents";
 import { useGitInvalidation } from "@/hooks/useGitInvalidation";
 import { useGraph } from "@/hooks/useGraph";
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { gitService } from "@/services/git.service";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { useStore } from "@/state/store";
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 function GitGraphApp() {
   const { loading, error, refresh, loadNextPage } = useGit();
+  const innerQueryClient = useQueryClient();
+  const setRepos = useStore((s) => s.setRepos);
+  const setActiveRepo = useStore((s) => s.setActiveRepo);
+  const activeRepoId = useStore((s) => s.activeRepoId);
 
   useConfigBridge();
   useThemeSync();
   useKeyboardNav();
   useGitInvalidation(refresh);
 
+  const { data: repoList } = useQuery({
+    queryKey: ["repos"],
+    queryFn: () => gitService.listRepos(),
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!repoList) return;
+    setRepos(repoList);
+    if (repoList.length > 0) {
+      const hasActive = activeRepoId && repoList.some((r) => r.id === activeRepoId);
+      if (!hasActive) {
+        const defaultId = repoList[0].id;
+        gitService.setRepoId(defaultId);
+        setActiveRepo(defaultId);
+      } else {
+        gitService.setRepoId(activeRepoId);
+      }
+    }
+  }, [repoList, setRepos, setActiveRepo, activeRepoId]);
+
+  const handleSwitchRepo = useCallback(
+    (id: string) => {
+      gitService.setRepoId(id);
+      setActiveRepo(id);
+      innerQueryClient.invalidateQueries();
+      void refresh();
+    },
+    [setActiveRepo, innerQueryClient, refresh]
+  );
+
+  const handleGitEvent = useCallback(
+    (kinds: string[]) => {
+      const set = new Set(kinds);
+      if (set.has("commits") || set.has("refs") || set.has("head") || set.has("stashes")) {
+        void refresh();
+        innerQueryClient.invalidateQueries({ queryKey: ["repoInfo"] });
+        innerQueryClient.invalidateQueries({ queryKey: ["repos"] });
+      } else if (set.has("workingTree")) {
+        innerQueryClient.invalidateQueries({ queryKey: ["repoInfo"] });
+      }
+    },
+    [refresh, innerQueryClient]
+  );
+
+  useGitEvents({ onChange: handleGitEvent });
+
   const { data: repoInfo } = useQuery({
-    queryKey: ["repoInfo"],
+    queryKey: ["repoInfo", activeRepoId],
     queryFn: () => gitService.getRepoInfo(),
     refetchOnWindowFocus: false,
   });
@@ -45,6 +100,7 @@ function GitGraphApp() {
           repo={repoInfo.name}
           branch={repoInfo.head.branch ?? repoInfo.head.shortHash}
           onRefresh={() => void refresh()}
+          onSwitchRepo={handleSwitchRepo}
           loading={loading}
         />
       )}

@@ -73,6 +73,16 @@
         "title": "Refresh",
         "category": "GitViz",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "git-viz.openSubmodule",
+        "title": "Open Submodule",
+        "category": "GitViz"
+      },
+      {
+        "command": "git-viz.openWorktree",
+        "title": "Open Worktree",
+        "category": "GitViz"
       }
     ],
     "menus": {

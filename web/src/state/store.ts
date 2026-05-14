@@ -6,9 +6,10 @@ import type {
   CommitsGetPageResponse,
   GitCommitSummary,
   GitRefsSnapshot,
+  RepoSummary,
 } from "@git-viz/shared";
 import { create } from "zustand";
-import { debounce, getPersistAdapter, type PersistedState } from "./persist";
+import { debounce, getPersistAdapter, type PersistedState, type PersistedRoot } from "./persist";
 
 export type DateFormat = "relative" | "absolute" | "iso";
 export type { RefDisplay };
@@ -99,7 +100,20 @@ interface FilterSlice {
   clearFilters: () => void;
 }
 
-export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice & FilterSlice;
+interface RepoSlice {
+  activeRepoId?: string;
+  repos: RepoSummary[];
+  setActiveRepo: (id: string) => void;
+  setRepos: (repos: RepoSummary[]) => void;
+}
+
+export type Store = CommitsSlice &
+  RefsSlice &
+  SelectionSlice &
+  ViewSlice &
+  UISlice &
+  FilterSlice &
+  RepoSlice;
 
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: "graph", visible: true, width: "flex" },
@@ -129,9 +143,25 @@ function normalizeColumns(raw: unknown): ColumnConfig[] | undefined {
 }
 
 const adapter = getPersistAdapter();
-const initial = adapter.get();
+const persistedRoot: PersistedRoot = adapter.get();
+const initialActiveRepoId = persistedRoot.activeRepoId;
+const initial: PersistedState =
+  (initialActiveRepoId !== undefined
+    ? persistedRoot.perRepo?.[initialActiveRepoId]
+    : persistedRoot.perRepo?.[""]) ?? {};
 
-export const useStore = create<Store>()((set) => ({
+function applyRepoSliceToState(slice: PersistedState): Partial<Store> {
+  return {
+    selectedHash: slice.selectedHash,
+    scrollY: slice.scrollY ?? 0,
+    presetId: slice.presetId ?? "git-graph-like",
+    refDisplay: (slice.refDisplay as RefDisplay) ?? "inline",
+    rowHeight: slice.rowHeight ?? 28,
+    columns: normalizeColumns(slice.columns) ?? DEFAULT_COLUMNS,
+  };
+}
+
+export const useStore = create<Store>()((set, get) => ({
   commits: [],
   hasMore: false,
   nextCursor: undefined,
@@ -258,6 +288,31 @@ export const useStore = create<Store>()((set) => ({
       hash: null,
       refScope: [],
     }),
+
+  activeRepoId: initialActiveRepoId,
+  repos: [],
+  setActiveRepo: (id) => {
+    const current = get().activeRepoId;
+    if (current === id) {
+      set({ activeRepoId: id });
+      return;
+    }
+    flushImmediate(get());
+    const root = adapter.get();
+    const incoming = root.perRepo?.[id] ?? {};
+    set({
+      activeRepoId: id,
+      ...applyRepoSliceToState(incoming),
+      commits: [],
+      hasMore: false,
+      nextCursor: undefined,
+      loading: false,
+      refs: undefined,
+      loadingRefs: false,
+      hoveredHash: undefined,
+    });
+  },
+  setRepos: (repos) => set({ repos }),
 }));
 
 export function selectActiveFilters(state: Store): {
@@ -298,14 +353,32 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "refScope",
 ];
 
-const flush = debounce((state: Store) => {
+function snapshotRepoSlice(state: Store): PersistedState {
   const slice: PersistedState = {};
   for (const k of PERSIST_KEYS) {
     const value = state[k];
     if (value !== undefined) (slice as Record<string, unknown>)[k] = value as never;
   }
-  adapter.set(slice);
-}, 100);
+  return slice;
+}
+
+function writeRoot(state: Store): void {
+  const root = adapter.get();
+  const repoId = state.activeRepoId ?? "";
+  const perRepo = { ...(root.perRepo ?? {}) };
+  perRepo[repoId] = snapshotRepoSlice(state);
+  const next: PersistedRoot = {
+    activeRepoId: state.activeRepoId,
+    perRepo,
+  };
+  adapter.set(next);
+}
+
+function flushImmediate(state: Store): void {
+  writeRoot(state);
+}
+
+const flush = debounce((state: Store) => writeRoot(state), 100);
 
 useStore.subscribe((state, prev) => {
   let changed = false;
@@ -315,5 +388,6 @@ useStore.subscribe((state, prev) => {
       break;
     }
   }
+  if (state.activeRepoId !== prev.activeRepoId) changed = true;
   if (changed) flush(state);
 });

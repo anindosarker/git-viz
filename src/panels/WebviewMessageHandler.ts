@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import path from "path";
 import { ConfigBridge } from "../settings/ConfigBridge";
 import { GitActionHandler } from "./handlers/GitActionHandler";
 import { GitLogHandler } from "./handlers/GitLogHandler";
@@ -10,6 +11,7 @@ import { diffHandlers } from "./handlers/diff.handler";
 import { refsHandlers } from "./handlers/refs.handler";
 import { remotesHandlers } from "./handlers/remotes.handler";
 import { repoHandlers } from "./handlers/repo.handler";
+import { multiRepoHandlers } from "./handlers/multiRepo.handler";
 import { CommandHandler, postResponse } from "./handlers/types";
 
 export class WebviewMessageHandler {
@@ -34,6 +36,7 @@ export class WebviewMessageHandler {
       ...refsHandlers,
       ...remotesHandlers,
       ...diffHandlers,
+      ...multiRepoHandlers,
       ...configHandlers,
       ...makeActionHandlers(),
     ]) {
@@ -49,7 +52,7 @@ export class WebviewMessageHandler {
 
     const registered = this._registry.get(command);
     if (registered) {
-      const cwd = this.getCwd();
+      const cwd = this.resolveCwd(message.payload);
       if (!cwd) {
         postResponse(this._webview, command, message.id, {
           error: "No workspace folder open",
@@ -92,7 +95,16 @@ export class WebviewMessageHandler {
     }
   }
 
-  private getCwd(): string | undefined {
+  /**
+   * Resolves the working directory for a request. Prefers `payload.repoId`
+   * when supplied (so multi-root webviews can scope per repo), otherwise
+   * falls back to the first workspace folder.
+   */
+  private resolveCwd(payload: any): string | undefined {
+    if (payload && typeof payload === "object") {
+      const repoId = (payload as { repoId?: unknown }).repoId;
+      if (typeof repoId === "string" && repoId.length > 0) return path.resolve(repoId);
+    }
     const folders = vscode.workspace.workspaceFolders;
     return folders && folders.length > 0 ? folders[0].uri.fsPath : undefined;
   }
