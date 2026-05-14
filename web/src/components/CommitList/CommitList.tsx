@@ -65,11 +65,7 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
           pointerEvents: "none", // Force pointer-events: none
         }}
       >
-        <CommitGraph
-          commits={commits}
-          rowHeight={rowHeight}
-          expandedRows={table.getState().expanded}
-        />
+        <CommitGraph commits={commits} rowHeight={rowHeight} />
       </div>
 
       <table className="w-full caption-bottom text-sm">

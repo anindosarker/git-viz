@@ -1,61 +1,42 @@
-import { rollingAlgorithm, type GraphRow as GraphRowType } from "@/graph";
+import { getRenderer, rollingAlgorithm } from "@/graph";
+import "@/graph/render/hybrid-canvas-wide";
 import type { GitCommitSummary } from "@git-viz/shared";
-import type { ExpandedState } from "@tanstack/react-table";
 import React, { useMemo } from "react";
-import { GraphRow } from "./GraphRow";
+import { useStore } from "@/state/store";
 
 interface CommitGraphProps {
   commits: GitCommitSummary[];
   rowHeight?: number;
-  expandedRows?: ExpandedState;
-  detailHeight?: number;
+  visibleRange?: { start: number; end: number };
+  onSelect?: (hash: string) => void;
 }
 
 export const CommitGraph: React.FC<CommitGraphProps> = ({
   commits,
-  rowHeight = 24,
-  expandedRows = {},
-  detailHeight = 256,
+  rowHeight,
+  visibleRange,
+  onSelect,
 }) => {
-  const laneWidth = 20;
-  const { rows, width } = useMemo(() => {
-    const result = rollingAlgorithm.compute({ commits, rowHeight, laneWidth });
-    const w = result.laneCount * laneWidth + 40;
-    return { rows: result.rows as GraphRowType[], width: w };
-  }, [commits, rowHeight, laneWidth]);
+  const rendererId = useStore((s) => s.rendererId);
+  const renderer = getRenderer(rendererId) ?? getRenderer("hybrid-canvas-wide");
+  const effectiveRowHeight = rowHeight ?? renderer?.defaultRowHeight ?? 28;
+  const laneWidth = renderer?.defaultLaneWidth ?? 24;
 
-  const rowPositions = useMemo(() => {
-    const expandedMap = expandedRows as Record<string, boolean>;
-    return rows.reduce<{ y: number; height: number; isExpanded: boolean }[]>((acc, row) => {
-      const prev = acc[acc.length - 1];
-      const y = prev ? prev.y + prev.height : 0;
-      const isExpanded = expandedMap[row.commit.hash];
-      const height = rowHeight + (isExpanded ? detailHeight : 0);
-      acc.push({ y, height, isExpanded });
-      return acc;
-    }, []);
-  }, [rows, expandedRows, rowHeight, detailHeight]);
+  const { rows } = useMemo(() => {
+    const result = rollingAlgorithm.compute({ commits, rowHeight: effectiveRowHeight, laneWidth });
+    return { rows: result.rows };
+  }, [commits, effectiveRowHeight, laneWidth]);
 
-  const totalHeight =
-    rowPositions.length > 0
-      ? rowPositions[rowPositions.length - 1].y + rowPositions[rowPositions.length - 1].height
-      : 0;
+  if (!renderer) return null;
+  const Renderer = renderer.Component;
 
   return (
-    <svg
-      width={width}
-      height={totalHeight}
-      className="block"
-      style={{ minWidth: width, minHeight: totalHeight }}
-    >
-      {rows.map((row, index) => {
-        const { y, height } = rowPositions[index];
-        return (
-          <g key={row.commit.hash} transform={`translate(0, ${y})`}>
-            <GraphRow row={row} rowHeight={rowHeight} totalHeight={height} laneWidth={laneWidth} />
-          </g>
-        );
-      })}
-    </svg>
+    <Renderer
+      rows={rows}
+      rowHeight={effectiveRowHeight}
+      laneWidth={laneWidth}
+      visibleRange={visibleRange}
+      onSelect={onSelect}
+    />
   );
 };
