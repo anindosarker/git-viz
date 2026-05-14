@@ -174,10 +174,8 @@ export const CommitTable: React.FC<CommitTableProps> = ({
           return (
             <CommitContextMenu key={row.commit.hash} commit={row.commit}>
               <div
-                className={
-                  "absolute left-0 right-0 hover:bg-muted/40 cursor-pointer " +
-                  (isSelected ? "bg-muted/60" : "")
-                }
+                className="absolute left-0 right-0 cursor-pointer gitviz-row"
+                data-selected={isSelected ? "true" : undefined}
                 style={{
                   top: vi.start,
                   height: vi.size,
