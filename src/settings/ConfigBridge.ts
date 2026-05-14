@@ -49,9 +49,10 @@ export class ConfigBridge implements vscode.Disposable {
       throw new Error(`Unknown git-viz config key: ${key}`);
     }
     const cfg = vscode.workspace.getConfiguration(GIT_VIZ_CONFIG_SECTION);
-    const target = cfg.inspect(key)?.workspaceValue !== undefined
-      ? vscode.ConfigurationTarget.Workspace
-      : vscode.ConfigurationTarget.Global;
+    const target =
+      cfg.inspect(key)?.workspaceValue !== undefined
+        ? vscode.ConfigurationTarget.Workspace
+        : vscode.ConfigurationTarget.Global;
     await cfg.update(key, value, target);
   }
 

@@ -110,10 +110,8 @@ export const useStore = create<Store>()((set) => ({
       const next: Partial<Store> = {};
       if (typeof values.graphStyle === "string") next.presetId = values.graphStyle;
       if (typeof values.rowHeight === "number") next.rowHeight = values.rowHeight;
-      if (typeof values.refDisplay === "string")
-        next.refDisplay = values.refDisplay as RefDisplay;
-      if (typeof values.dateFormat === "string")
-        next.dateFormat = values.dateFormat as DateFormat;
+      if (typeof values.refDisplay === "string") next.refDisplay = values.refDisplay as RefDisplay;
+      if (typeof values.dateFormat === "string") next.dateFormat = values.dateFormat as DateFormat;
       if (typeof values.showWorkingTree === "boolean")
         next.showWorkingTree = values.showWorkingTree;
       if (typeof values.topoOrder === "boolean") next.topoOrder = values.topoOrder;

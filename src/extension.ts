@@ -31,7 +31,10 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   const openSettingsCommand = vscode.commands.registerCommand("git-viz.openSettings", async () => {
-    await vscode.commands.executeCommand("workbench.action.openSettings", "@ext:anindosarker.git-viz");
+    await vscode.commands.executeCommand(
+      "workbench.action.openSettings",
+      "@ext:anindosarker.git-viz"
+    );
   });
 
   const refreshCommand = vscode.commands.registerCommand("git-viz.refresh", () => {
