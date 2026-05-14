@@ -20,4 +20,16 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Column definition files and renderer factories export both a Component
+    // and a definition/factory object — that's by design.
+    files: [
+      "src/graph/columns/*.column.tsx",
+      "src/graph/render/hybrid-canvas-shared.tsx",
+      "src/graph/render/hybrid-canvas-*.tsx",
+    ],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ]);
