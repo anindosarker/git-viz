@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { gitService } from "../../services/git.service";
 import { useStore } from "../../state/store";
@@ -8,7 +8,12 @@ import { isHashLike, parseSearch } from "./searchQuery";
 
 const DEBOUNCE_MS = 300;
 
-export function SearchBar() {
+interface SearchBarProps {
+  matchCount?: number;
+  onJumpToMatch?: (direction: "prev" | "next") => void;
+}
+
+export function SearchBar({ matchCount, onJumpToMatch }: SearchBarProps = {}) {
   const setQuery = useStore((s) => s.setQuery);
   const setAuthor = useStore((s) => s.setAuthor);
   const setPaths = useStore((s) => s.setPaths);
@@ -19,6 +24,7 @@ export function SearchBar() {
   const select = useStore((s) => s.select);
   const appendPage = useStore((s) => s.appendPage);
   const resetCommits = useStore((s) => s.resetCommits);
+  const pushSearchHistory = useStore((s) => s.pushSearchHistory);
 
   const [input, setInput] = useState<string>(() => {
     // Re-hydrate the displayed search string from persisted filter state.
@@ -32,6 +38,8 @@ export function SearchBar() {
     for (const r of s.refScope) parts.push(`ref:${r}`);
     return parts.join(" ");
   });
+  // -1 means "current draft", 0..n-1 indexes into history.
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,6 +59,7 @@ export function SearchBar() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       apply(input);
+      if (input.trim()) pushSearchHistory(input);
     }, DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -86,6 +95,7 @@ export function SearchBar() {
       e.preventDefault();
       setInput("");
       apply("");
+      setHistoryIndex(-1);
       inputRef.current?.blur();
       return;
     }
@@ -96,9 +106,35 @@ export function SearchBar() {
         debounceRef.current = null;
       }
       apply(input);
+      if (input.trim()) pushSearchHistory(input);
       if (hashCandidate) {
         void jumpToHash(hashCandidate);
+      } else if (e.shiftKey) {
+        onJumpToMatch?.("prev");
+      } else {
+        onJumpToMatch?.("next");
       }
+      return;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const history = useStore.getState().searchHistory;
+      if (history.length === 0) return;
+      const next = Math.min(historyIndex + 1, history.length - 1);
+      setHistoryIndex(next);
+      setInput(history[next] ?? "");
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const history = useStore.getState().searchHistory;
+      if (historyIndex <= 0) {
+        setHistoryIndex(-1);
+        return;
+      }
+      const next = historyIndex - 1;
+      setHistoryIndex(next);
+      setInput(history[next] ?? "");
       return;
     }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -107,36 +143,49 @@ export function SearchBar() {
     }
   };
 
+  const showMatches = trimmed.length > 0 && typeof matchCount === "number";
+
   return (
-    <div className="relative flex items-center gap-1 w-72">
+    <div className="relative flex items-center gap-1 w-full">
       <div className="relative flex-1">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Sparkles className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <input
           ref={inputRef}
           data-gitviz="search"
           type="text"
-          placeholder="Search commits…  (try author:foo path:bar)"
+          placeholder="Search commits using natural language (↑↓ for history), e.g. my commits from last week"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            setHistoryIndex(-1);
+          }}
           onKeyDown={onKeyDown}
-          className="w-full h-8 pl-7 pr-7 text-sm rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+          className="w-full h-7 pl-7 pr-24 text-xs rounded-md border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
           aria-label="Search commits"
         />
-        {input && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="absolute right-0.5 top-1/2 -translate-y-1/2 h-6 w-6"
-            onClick={() => {
-              setInput("");
-              apply("");
-              inputRef.current?.focus();
-            }}
-            aria-label="Clear search"
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {showMatches && (
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              {matchCount === 0 ? "No results" : `${matchCount} results`}
+            </span>
+          )}
+          {input && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="h-5 w-5"
+              onClick={() => {
+                setInput("");
+                apply("");
+                setHistoryIndex(-1);
+                inputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
       </div>
       {hashCandidate && (
         <HashJumpHint hash={hashCandidate} onJump={() => void jumpToHash(hashCandidate)} />
