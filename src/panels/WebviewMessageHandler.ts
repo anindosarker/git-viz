@@ -2,30 +2,62 @@ import * as vscode from "vscode";
 import { GitActionHandler } from "./handlers/GitActionHandler";
 import { GitLogHandler } from "./handlers/GitLogHandler";
 import { SystemHandler } from "./handlers/SystemHandler";
+import { commitsHandlers } from "./handlers/commits.handler";
+import { refsHandlers } from "./handlers/refs.handler";
+import { remotesHandlers } from "./handlers/remotes.handler";
+import { repoHandlers } from "./handlers/repo.handler";
+import { CommandHandler, postResponse } from "./handlers/types";
 
 export class WebviewMessageHandler {
+  private readonly _webview: vscode.Webview;
   private readonly _gitLogHandler: GitLogHandler;
   private readonly _gitActionHandler: GitActionHandler;
   private readonly _systemHandler: SystemHandler;
+  private readonly _registry: Map<string, CommandHandler>;
 
   constructor(webview: vscode.Webview) {
+    this._webview = webview;
     this._gitLogHandler = new GitLogHandler(webview);
     this._gitActionHandler = new GitActionHandler(webview);
     this._systemHandler = new SystemHandler();
+
+    this._registry = new Map();
+    for (const h of [
+      ...repoHandlers,
+      ...commitsHandlers,
+      ...refsHandlers,
+      ...remotesHandlers,
+    ]) {
+      this._registry.set(h.command, h);
+    }
   }
 
   public async handleMessage(message: any) {
-    const command = message.command;
-    const text = message.text;
+    const command: string | undefined = message?.command;
+    if (!command) return;
 
-    console.log(
-      `[WebviewMessageHandler] Received message: ${command}`,
-      message
-    );
+    console.log(`[WebviewMessageHandler] Received: ${command}`, message);
 
-    switch (command) {
+    const registered = this._registry.get(command);
+    if (registered) {
+      const cwd = this.getCwd();
+      if (!cwd) {
+        postResponse(this._webview, command, message.id, {
+          error: "No workspace folder open",
+        });
+        return;
+      }
+      await registered.handle(message.payload, cwd, this._webview, message.id);
+      return;
+    }
+
+    await this.handleLegacy(message);
+  }
+
+  private async handleLegacy(message: any): Promise<void> {
+    switch (message.command) {
       case "hello":
-        this._systemHandler.handleHello(text);
+        this._systemHandler.handleHello(message.text);
         return;
       case "requestLog":
         await this._gitLogHandler.handleRequestLog();
@@ -49,5 +81,10 @@ export class WebviewMessageHandler {
         await this._gitActionHandler.handleMergeBranch(message.data);
         return;
     }
+  }
+
+  private getCwd(): string | undefined {
+    const folders = vscode.workspace.workspaceFolders;
+    return folders && folders.length > 0 ? folders[0].uri.fsPath : undefined;
   }
 }
