@@ -1,4 +1,5 @@
-import { FolderGit2, GitBranch, RotateCw } from "lucide-react";
+import { FolderGit2, GitBranch, RotateCw, Settings } from "lucide-react";
+import { useStore } from "../../state/store";
 import { Button } from "../ui/button";
 
 interface TopBarProps {
@@ -9,6 +10,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
+  const setPreferencesOpen = useStore((s) => s.setPreferencesOpen);
   return (
     <div className="flex items-center justify-between bg-muted/40 p-2 border-b text-sm">
       <div className="flex items-center gap-4">
@@ -22,15 +24,26 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
           <span>{branch}</span>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onRefresh}
-        disabled={loading}
-        title="Refresh Log"
-      >
-        <RotateCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          disabled={loading}
+          title="Refresh Log"
+        >
+          <RotateCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setPreferencesOpen(true)}
+          title="Preferences"
+          aria-label="Open preferences"
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

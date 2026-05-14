@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
+import { ConfigBridge } from "../settings/ConfigBridge";
 import { GitActionHandler } from "./handlers/GitActionHandler";
 import { GitLogHandler } from "./handlers/GitLogHandler";
 import { SystemHandler } from "./handlers/SystemHandler";
 import { commitsHandlers } from "./handlers/commits.handler";
+import { makeConfigHandlers } from "./handlers/config.handler";
 import { refsHandlers } from "./handlers/refs.handler";
 import { remotesHandlers } from "./handlers/remotes.handler";
 import { repoHandlers } from "./handlers/repo.handler";
@@ -15,14 +17,22 @@ export class WebviewMessageHandler {
   private readonly _systemHandler: SystemHandler;
   private readonly _registry: Map<string, CommandHandler>;
 
-  constructor(webview: vscode.Webview) {
+  constructor(webview: vscode.Webview, configBridge?: ConfigBridge) {
     this._webview = webview;
     this._gitLogHandler = new GitLogHandler(webview);
     this._gitActionHandler = new GitActionHandler(webview);
     this._systemHandler = new SystemHandler();
 
+    const configHandlers = configBridge ? makeConfigHandlers(configBridge) : [];
+
     this._registry = new Map();
-    for (const h of [...repoHandlers, ...commitsHandlers, ...refsHandlers, ...remotesHandlers]) {
+    for (const h of [
+      ...repoHandlers,
+      ...commitsHandlers,
+      ...refsHandlers,
+      ...remotesHandlers,
+      ...configHandlers,
+    ]) {
       this._registry.set(h.command, h);
     }
   }

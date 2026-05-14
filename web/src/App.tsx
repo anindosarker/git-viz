@@ -2,8 +2,12 @@ import type { CommitRow, GitRefPointer } from "@/types/git";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { CommitList } from "./components/CommitList/CommitList";
+import { PreferencesPanel } from "./components/PreferencesPanel/PreferencesPanel";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit";
+import { useConfigBridge } from "./hooks/useConfigBridge";
+import { useKeyboardNav } from "./hooks/useKeyboardNav";
+import { useThemeSync } from "./hooks/useThemeSync";
 import { gitService } from "./services/git.service";
 import { useStore } from "./state/store";
 
@@ -14,6 +18,10 @@ function GitGraphApp() {
   const commits = useStore((s) => s.commits);
   const refs = useStore((s) => s.refs);
   const rowHeight = useStore((s) => s.rowHeight);
+
+  useConfigBridge();
+  useThemeSync();
+  useKeyboardNav();
 
   const { data: repoInfo } = useQuery({
     queryKey: ["repoInfo"],
@@ -74,6 +82,8 @@ function GitGraphApp() {
           <CommitList commits={rows} rowHeight={rowHeight} loading={loading} />
         </div>
       </div>
+
+      <PreferencesPanel />
     </div>
   );
 }

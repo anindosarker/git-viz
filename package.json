@@ -28,20 +28,144 @@
   },
   "homepage": "https://github.com/anindosarker/git-viz#readme",
   "activationEvents": [
-    "*"
+    "onView:git-viz.repoTree",
+    "onCommand:git-viz.showCommitGraph",
+    "workspaceContains:**/.git"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "git-viz",
+          "title": "Git Viz",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "views": {
+      "git-viz": [
+        {
+          "id": "git-viz.repoTree",
+          "name": "Repositories",
+          "contextualTitle": "Git Viz"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "git-viz.showCommitGraph",
-        "title": "GitViz: Show Commit Graph"
+        "title": "Show Commit Graph",
+        "category": "GitViz"
       },
       {
         "command": "git-viz.switchBranch",
-        "title": "GitViz: Switch Branch"
+        "title": "Switch Branch",
+        "category": "GitViz"
+      },
+      {
+        "command": "git-viz.openSettings",
+        "title": "Open Settings",
+        "category": "GitViz"
+      },
+      {
+        "command": "git-viz.refresh",
+        "title": "Refresh",
+        "category": "GitViz",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "git-viz.refresh",
+          "when": "view == git-viz.repoTree",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "git-viz.showCommitGraph",
+        "key": "ctrl+shift+g ctrl+shift+v",
+        "mac": "cmd+shift+g cmd+shift+v"
+      },
+      {
+        "command": "git-viz.refresh",
+        "key": "f5",
+        "when": "activeWebviewPanelId == git-viz.commitGraph"
+      }
+    ],
+    "configuration": {
+      "title": "Git Viz",
+      "properties": {
+        "git-viz.graphStyle": {
+          "type": "string",
+          "enum": [
+            "gitlens-like",
+            "git-graph-like",
+            "vscode-scm-graph-like"
+          ],
+          "default": "gitlens-like",
+          "description": "Visual preset for the commit graph"
+        },
+        "git-viz.refDisplay": {
+          "type": "string",
+          "enum": [
+            "inline",
+            "left-column",
+            "right-column"
+          ],
+          "default": "left-column",
+          "description": "Where ref labels are rendered relative to the commit row"
+        },
+        "git-viz.rowHeight": {
+          "type": "number",
+          "default": 24,
+          "description": "Height of each commit row in pixels"
+        },
+        "git-viz.pageSize": {
+          "type": "number",
+          "default": 500,
+          "description": "Number of commits fetched per page"
+        },
+        "git-viz.topoOrder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Order commits topologically rather than by date"
+        },
+        "git-viz.dateFormat": {
+          "type": "string",
+          "enum": [
+            "relative",
+            "absolute",
+            "iso"
+          ],
+          "default": "relative",
+          "description": "How commit dates are formatted"
+        },
+        "git-viz.showWorkingTree": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a row for the uncommitted working tree state"
+        },
+        "git-viz.columns": {
+          "type": "array",
+          "description": "Visible columns and their order",
+          "default": [
+            "graph",
+            "subject",
+            "refs",
+            "author",
+            "date",
+            "hash"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm --filter web build && pnpm compile",
