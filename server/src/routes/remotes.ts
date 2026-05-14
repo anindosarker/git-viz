@@ -1,22 +1,15 @@
-import { Router, type Request, type Response, type RequestHandler } from "express";
+import { Router } from "express";
 import { GitRemoteService } from "@git-viz/backend/GitRemoteService";
+import type { RepoRegistry } from "../RepoRegistry";
+import { repoPathFor, wrap } from "./_helpers";
 
-function wrap(handler: (req: Request, res: Response) => Promise<unknown>): RequestHandler {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res);
-    } catch (err) {
-      next(err);
-    }
-  };
-}
-
-export function remotesRoutes(repoPath: string): Router {
+export function remotesRoutes(registry: RepoRegistry): Router {
   const r = Router();
 
   r.get(
     "/remotes",
-    wrap(async (_req, res) => {
+    wrap(async (req, res) => {
+      const repoPath = repoPathFor(req, registry);
       const data = await GitRemoteService.list(repoPath);
       res.json(data);
     })
