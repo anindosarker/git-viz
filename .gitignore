@@ -11,3 +11,6 @@ node_modules
 
 # AI workspace reference repos
 .ai/reference/
+
+# Git worktrees for parallel agent dev
+.git-worktree/
