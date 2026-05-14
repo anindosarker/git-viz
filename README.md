@@ -1,16 +1,20 @@
 # git-viz
 
-A Git visualization tool that works both as a **VS Code Extension** and a **Standalone Web Viewer**.
+A Git history visualizer that runs in two modes from the same React UI:
+
+- **VS Code Extension** — embeds the viewer in a webview panel.
+- **Standalone Web Viewer** — serves the UI from a local Node process for any repo.
 
 ## Features
 
-- Visualize commit history and branches (Git Graph).
-- View commit details, authors, and dates.
-- Works directly within VS Code or in any browser.
+- Commit history and branch graph visualization.
+- Commit details, authors, and dates.
+- Works inside VS Code or in any browser.
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v14 or higher)
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [pnpm](https://pnpm.io/) (v8 or higher)
 - [Git](https://git-scm.com/)
 
 ## Installation
@@ -21,93 +25,80 @@ A Git visualization tool that works both as a **VS Code Extension** and a **Stan
 2. Download the `.vsix` file from the latest release.
 3. Open VS Code.
 4. Go to the Extensions view (`Ctrl+Shift+X` or `Cmd+Shift+X`).
-5. Click the "..." (Views and More Actions) menu at the top right of the Extensions view.
-6. Select **Install from VSIX...**.
-7. Select the downloaded `.vsix` file.
+5. Click the "..." menu at the top right of the Extensions view.
+6. Select **Install from VSIX...** and pick the downloaded file.
 
 ### From Source
 
-1. Clone the repository:
+The repository is a pnpm workspace. A single install at the root pulls dependencies for the extension, the web client, the backend, and the shared types package.
 
-   ```bash
-   git clone <repository-url>
-   cd git-viz
-   ```
-
-2. Install dependencies for the extension:
-
-   ```bash
-   npm install
-   ```
-
-3. Install dependencies for the web view:
-   ```bash
-   cd web
-   npm install
-   ```
+```bash
+git clone <repository-url>
+cd git-viz
+pnpm install
+```
 
 ---
 
-## 🚀 Running the Standalone Server
+## Running the Standalone Server
 
-You can run `git-viz` as a standalone web server to visualize any local git repository in your browser.
+Run `git-viz` as a standalone web server to visualize any local git repository in your browser.
 
 1. Build the web client:
 
    ```bash
-   cd web
-   npm run build
+   pnpm --filter web build
    ```
 
-2. Start the server:
+2. Start the server against a target repository:
 
    ```bash
-   # Syntax: node server.cjs [path-to-repo]
-
-   # Example: Visualize the current directory
-   node server.cjs
-
-   # Example: Visualize a specific repository
-   node server.cjs /Users/username/projects/my-app
+   pnpm --filter @git-viz/server start -- --repo <path-to-repo>
    ```
 
-3. Open your browser and navigate to:
+   Or invoke the built output directly:
+
+   ```bash
+   node server/dist/index.js --repo <path-to-repo>
    ```
-   http://localhost:3000
-   ```
+
+   If `--repo` is omitted, the server uses the current working directory.
+
+3. Open `http://localhost:3000` in your browser.
 
 ---
 
-## 💻 Running the VS Code Extension
+## Running the VS Code Extension
 
-To develop or run the extension within VS Code:
-
-1. ensure the web assets are built (the extension loads the built files):
+1. Build the web assets (the extension loads them from `web/dist`):
 
    ```bash
-   cd web
-   npm run build
+   pnpm --filter web build
    ```
 
-   > **Note:** You can also run `npm run dev` in the `web` folder if you want to develop the UI in a browser first, but the VS Code extension specifically looks for files in `web/dist`.
-
-2. Open the project in VS Code:
+2. Compile the extension:
 
    ```bash
-   code .
+   pnpm compile
    ```
 
-3. Press **F5** (or go to **Run and Debug** > **Run Extension**) to start the Extension Host window.
+3. Open the project in VS Code and press **F5** (or **Run and Debug > Run Extension**) to launch the Extension Host.
 
-4. In the new Extension Host window:
-   - Open any folder that is a Git repository.
+4. In the Extension Host window:
+   - Open a folder that is a Git repository.
    - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
-   - Run the command: **Hello World** (This corresponds to `git-viz.helloWorld`).
-   - The Git Viz panel will open.
+   - Run **GitViz: Show Commit Graph**.
+
+   Additional command: **GitViz: Switch Branch**.
 
 ## Project Structure
 
-- `src/`: Source code for the VS Code extension (TypeScript).
-- `web/`: Source code for the React-based UI.
-  - `web/server.cjs`: Express-like server script for the standalone mode.
-  - `web/src/`: React components and logic.
+- `src/` — VS Code extension entry point (TypeScript).
+- `web/` — React UI shared between extension and standalone modes.
+- `backend/` — Git operations backend used by the standalone server.
+- `shared/` — Shared TypeScript types between web and backend.
+- `server.cjs` — Legacy standalone entry point (being replaced by `server/`).
+
+## Architecture & Plans
+
+Active and historical implementation plans live in [`.ai/plans/`](.ai/plans/). Contributors should read the relevant plan before starting work on a feature; see `docs/code-of-conduct/planning-guidelines.md` for the planning workflow.
