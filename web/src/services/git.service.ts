@@ -9,6 +9,9 @@ import type {
   GitRefsSnapshot,
   GitRemote,
   GitRepoInfo,
+  GitSubmodule,
+  GitWorktree,
+  RepoSummary,
 } from "@git-viz/shared";
 import { makeTransport, type Transport } from "./transport";
 
@@ -64,6 +67,26 @@ export class GitService {
 
   getRemotes(): Promise<GitRemote[]> {
     return this.transport.request("remotes:list");
+  }
+
+  listRepos(): Promise<RepoSummary[]> {
+    return this.transport.request("repos:list");
+  }
+
+  listSubmodules(): Promise<GitSubmodule[]> {
+    return this.transport.request("submodules:list");
+  }
+
+  listWorktrees(): Promise<GitWorktree[]> {
+    return this.transport.request("worktrees:list");
+  }
+
+  getRepoId(): string | undefined {
+    return this.transport.getRepoId?.();
+  }
+
+  setRepoId(id: string): void {
+    this.transport.setRepoId?.(id);
   }
 }
 
