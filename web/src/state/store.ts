@@ -91,6 +91,8 @@ interface FilterSlice {
   paths: string[];
   hash: string | null;
   refScope: string[];
+  searchHistory: string[];
+  lastFetchAt?: number;
   setQuery: (q: string) => void;
   setQueryRegex: (v: boolean) => void;
   setAuthor: (v: string | null) => void;
@@ -101,6 +103,8 @@ interface FilterSlice {
   setRefScope: (v: string[]) => void;
   toggleRefScope: (refName: string) => void;
   clearFilters: () => void;
+  pushSearchHistory: (q: string) => void;
+  setLastFetchAt: (ts: number) => void;
 }
 
 interface RepoSlice {
@@ -280,6 +284,16 @@ export const useStore = create<Store>()((set, get) => ({
   paths: initial.paths ?? [],
   hash: null,
   refScope: initial.refScope ?? [],
+  searchHistory: (initial as { searchHistory?: string[] }).searchHistory ?? [],
+  lastFetchAt: undefined,
+  pushSearchHistory: (q) =>
+    set((state) => {
+      const trimmed = q.trim();
+      if (!trimmed) return state;
+      const next = [trimmed, ...state.searchHistory.filter((s) => s !== trimmed)].slice(0, 20);
+      return { searchHistory: next };
+    }),
+  setLastFetchAt: (lastFetchAt) => set({ lastFetchAt }),
   setQuery: (query) => set({ query }),
   setQueryRegex: (queryRegex) => set({ queryRegex }),
   setAuthor: (author) => set({ author }),
@@ -371,6 +385,7 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "until",
   "paths",
   "refScope",
+  "searchHistory",
 ];
 
 function snapshotRepoSlice(state: Store): PersistedState {

@@ -25,6 +25,7 @@ export interface PersistedState {
   until?: string | null;
   paths?: string[];
   refScope?: string[];
+  searchHistory?: string[];
 }
 
 /** Outer shape: global activeRepoId + a slice per repo. */
