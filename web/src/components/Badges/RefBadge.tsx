@@ -1,4 +1,4 @@
-import { Check, Cloud, Laptop, Tag } from "lucide-react";
+import { Archive, Cloud, Disc, GitBranch, Tag } from "lucide-react";
 import React from "react";
 import { gitActions } from "../../services/git-actions.service";
 import { useActionsStore } from "../../state/actionsStore";
@@ -19,7 +19,7 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
   // Parse ref type and name
   // Examples: "HEAD -> master", "origin/master", "tag: v1.0", "feature/foo"
 
-  let type: "head" | "remote" | "tag" | "branch" = "branch";
+  let type: "head" | "remote" | "tag" | "branch" | "stash" = "branch";
   let name = refName;
   let isHead = false;
 
@@ -30,29 +30,27 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
   } else if (refName.startsWith("tag: ")) {
     type = "tag";
     name = refName.replace("tag: ", "");
+  } else if (refName.startsWith("stash@")) {
+    type = "stash";
   } else if (refName.includes("/")) {
     type = "remote";
   }
 
-  const getIcons = () => {
-    const icons = [];
-    if (isHead) {
-      icons.push(<Check key="check" className="w-3 h-3 mr-1" />);
-    }
-
+  const getIcon = () => {
+    const cls = "w-3 h-3 shrink-0";
+    if (isHead) return <Disc key="head" className={cls} />;
     switch (type) {
-      case "head":
       case "branch":
-        icons.push(<Laptop key="laptop" className="w-3 h-3 mr-1" />);
-        break;
+        return <GitBranch key="branch" className={cls} />;
       case "remote":
-        icons.push(<Cloud key="cloud" className="w-3 h-3 mr-1" />);
-        break;
+        return <Cloud key="remote" className={cls} />;
       case "tag":
-        icons.push(<Tag key="tag" className="w-3 h-3 mr-1" />);
-        break;
+        return <Tag key="tag" className={cls} />;
+      case "stash":
+        return <Archive key="stash" className={cls} />;
+      default:
+        return null;
     }
-    return icons;
   };
 
   const getStyle = (): React.CSSProperties => {
@@ -83,6 +81,12 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
           color: "var(--gitviz-badge-tag-fg)",
           borderColor: "transparent",
         };
+      case "stash":
+        return {
+          backgroundColor: "var(--gitviz-badge-bg)",
+          color: "var(--gitviz-badge-fg)",
+          borderColor: "transparent",
+        };
       default:
         return {};
     }
@@ -95,11 +99,11 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
 
   const badge = (
     <div
-      className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-medium border whitespace-nowrap cursor-context-menu"
-      style={getStyle()}
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium border whitespace-nowrap cursor-context-menu font-mono leading-none"
+      style={{ ...getStyle(), fontWeight: isHead ? 600 : 500 }}
     >
-      {getIcons()}
-      {name}
+      {getIcon()}
+      <span>{name}</span>
     </div>
   );
 
