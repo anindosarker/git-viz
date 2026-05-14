@@ -8,6 +8,7 @@ import {
 import React from "react";
 import { rollingAlgorithm } from "@/graph";
 import { gitActions } from "../../services/git-actions.service";
+import { selectActiveFilters, useStore } from "../../state/store";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
@@ -27,6 +28,8 @@ interface CommitListProps {
 }
 
 export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, loading }) => {
+  const hasActiveFilters = useStore((s) => selectActiveFilters(s).hasActiveFilters);
+  const clearFilters = useStore((s) => s.clearFilters);
   // Calculate graph layout to get width
   const graphWidth = React.useMemo(() => {
     const result = rollingAlgorithm.compute({ commits, rowHeight, laneWidth: 20 });
@@ -193,7 +196,20 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
           {!loading && commits.length === 0 && (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center h-24">
-                No commits found
+                {hasActiveFilters ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span>No commits match the current filters.</span>
+                    <button
+                      type="button"
+                      onClick={() => clearFilters()}
+                      className="text-xs underline text-muted-foreground hover:text-foreground"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                ) : (
+                  "No commits found"
+                )}
               </TableCell>
             </TableRow>
           )}
