@@ -1,5 +1,6 @@
-import { CommitContextMenu } from "@/components/CommitList/CommitContextMenu";
 import { CommitGraph } from "@/components/Graph/CommitGraph";
+import { CommitTableHeader } from "@/components/Graph/CommitTableHeader";
+import { CommitTableRow } from "@/components/Graph/CommitTableRow";
 import { columnRegistry, getColumn, getRenderer } from "@/graph";
 import "@/graph/columns/author.column";
 import "@/graph/columns/authorAvatar.column";
@@ -15,6 +16,13 @@ import "@/graph/render/hybrid-canvas-wide";
 import type { GraphRow } from "@/graph";
 import type { ColumnConfig } from "@/graph/columns/types";
 import { useStore } from "@/state/store";
+import {
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type SortingState,
+} from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
@@ -27,8 +35,8 @@ interface CommitTableProps {
   endReachedThreshold?: number;
 }
 
-function columnWidthCss(c: ColumnConfig): string | number {
-  if (c.width === "flex") return "1fr" as unknown as string;
+function columnWidthCss(c: ColumnConfig): string {
+  if (c.width === "flex") return "minmax(0, 1fr)";
   return `${c.width}px`;
 }
 
@@ -46,6 +54,9 @@ export const CommitTable: React.FC<CommitTableProps> = ({
   const rendererId = useStore((s) => s.rendererId);
   const selectedHash = useStore((s) => s.selectedHash);
   const select = useStore((s) => s.select);
+  const sorting = useStore((s) => s.sorting);
+  const setSorting = useStore((s) => s.setSorting);
+  const setColumns = useStore((s) => s.setColumns);
 
   const renderer = getRenderer(rendererId);
   const effectiveRowHeight = renderer?.defaultRowHeight ?? rowHeight;
@@ -71,7 +82,6 @@ export const CommitTable: React.FC<CommitTableProps> = ({
 
   const graphColIndex = visibleColumns.findIndex((c) => c.config.id === "graph");
 
-  // Estimate graph column max lane usage from current rows
   const maxLanes = useMemo(() => {
     let m = 0;
     for (const r of rows) {
@@ -83,8 +93,7 @@ export const CommitTable: React.FC<CommitTableProps> = ({
 
   const graphWidth = maxLanes * laneWidth + laneWidth;
 
-  // Override graph column width to match canvas width
-  const effectiveGridTemplate = useMemo(() => {
+  const gridTemplate = useMemo(() => {
     return visibleColumns
       .map((c) => {
         if (c.config.id === "graph") return `${graphWidth}px`;
@@ -93,18 +102,136 @@ export const CommitTable: React.FC<CommitTableProps> = ({
       .join(" ");
   }, [visibleColumns, graphWidth]);
 
+  const tableColumns = useMemo<ColumnDef<GraphRow>[]>(() => {
+    return visibleColumns.map(({ config, def }) => {
+      const cell = ({ row }: { row: { original: GraphRow } }) => {
+        const ColumnComp = def.Component;
+        return (
+          <ColumnComp row={row.original} context={{ refsInline: !!config.refsInline, ...config }} />
+        );
+      };
+      const base = {
+        id: def.id,
+        header: def.label,
+        enableSorting: !!def.sortable,
+        enableHiding: true,
+        cell,
+      };
+      switch (config.id) {
+        case "date":
+          return {
+            ...base,
+            accessorFn: (r: GraphRow) => r.commit.authorDate ?? "",
+            sortingFn: "datetime",
+          } as ColumnDef<GraphRow>;
+        case "author":
+          return {
+            ...base,
+            accessorFn: (r: GraphRow) => r.commit.author ?? "",
+            sortingFn: "alphanumeric",
+          } as ColumnDef<GraphRow>;
+        case "hash":
+          return {
+            ...base,
+            accessorFn: (r: GraphRow) => r.commit.hash ?? "",
+            sortingFn: "alphanumeric",
+          } as ColumnDef<GraphRow>;
+        case "changes":
+          return {
+            ...base,
+            accessorFn: (r: GraphRow) =>
+              (r.commit as unknown as { stats?: { files?: number } }).stats?.files ?? 0,
+            sortingFn: "basic",
+          } as ColumnDef<GraphRow>;
+        default:
+          return base as ColumnDef<GraphRow>;
+      }
+    });
+  }, [visibleColumns]);
+
+  const columnVisibility = useMemo(() => {
+    const v: Record<string, boolean> = {};
+    for (const c of columns) v[c.id] = c.visible;
+    return v;
+  }, [columns]);
+
+  const columnOrder = useMemo(() => columns.map((c) => c.id), [columns]);
+
+  const onSortingChange = useCallback(
+    (updater: SortingState | ((s: SortingState) => SortingState)) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      setSorting(next);
+    },
+    [sorting, setSorting]
+  );
+
+  const onColumnVisibilityChange = useCallback(
+    (
+      updater: Record<string, boolean> | ((s: Record<string, boolean>) => Record<string, boolean>)
+    ) => {
+      const next = typeof updater === "function" ? updater(columnVisibility) : updater;
+      setColumns(columns.map((c) => ({ ...c, visible: next[c.id] ?? c.visible })));
+    },
+    [columns, columnVisibility, setColumns]
+  );
+
+  const onColumnOrderChange = useCallback(
+    (updater: string[] | ((s: string[]) => string[])) => {
+      const next = typeof updater === "function" ? updater(columnOrder) : updater;
+      const byId = new Map(columns.map((c) => [c.id, c]));
+      const reordered: ColumnConfig[] = [];
+      for (const id of next) {
+        const c = byId.get(id as ColumnConfig["id"]);
+        if (c) reordered.push(c);
+      }
+      for (const c of columns) if (!next.includes(c.id)) reordered.push(c);
+      setColumns(reordered);
+    },
+    [columns, columnOrder, setColumns]
+  );
+
   // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
+    data: rows,
+    columns: tableColumns,
+    state: { sorting, columnVisibility, columnOrder },
+    onSortingChange,
+    onColumnVisibilityChange,
+    onColumnOrderChange,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const sortedRows = table.getRowModel().rows;
+  const isCustomSorted = sorting.length > 0;
+
+  const measuredIndicesRef = useRef<Set<number>>(new Set());
+  // Reset measure cache when row count or height changes
+  useEffect(() => {
+    measuredIndicesRef.current = new Set();
+  }, [rows.length, effectiveRowHeight]);
+
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: sortedRows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => effectiveRowHeight,
-    overscan: 12,
+    overscan: 10,
+    measureElement: (el) => {
+      const idxAttr = el.getAttribute("data-index");
+      if (idxAttr) {
+        const idx = Number(idxAttr);
+        if (measuredIndicesRef.current.has(idx)) {
+          return effectiveRowHeight;
+        }
+        measuredIndicesRef.current.add(idx);
+      }
+      return el.getBoundingClientRect().height;
+    },
   });
 
   const items = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
-  // Trigger pagination when near the bottom
   const onEndRef = useRef(onEndReached);
   useEffect(() => {
     onEndRef.current = onEndReached;
@@ -112,10 +239,10 @@ export const CommitTable: React.FC<CommitTableProps> = ({
   useEffect(() => {
     if (!items.length) return;
     const lastIndex = items[items.length - 1].index;
-    if (lastIndex >= rows.length - endReachedThreshold) {
+    if (lastIndex >= sortedRows.length - endReachedThreshold) {
       onEndRef.current?.();
     }
-  }, [items, rows.length, endReachedThreshold]);
+  }, [items, sortedRows.length, endReachedThreshold]);
 
   const handleSelect = useCallback(
     (hash: string) => {
@@ -125,42 +252,42 @@ export const CommitTable: React.FC<CommitTableProps> = ({
     [select, onSelect]
   );
 
-  // Visible range for canvas optimization
   const visibleRange = useMemo(() => {
     if (!items.length) return { start: 0, end: 0 };
     return { start: items[0].index, end: items[items.length - 1].index + 1 };
   }, [items]);
 
+  const canvasLeftOffset = useMemo(() => {
+    let offset = 0;
+    for (let i = 0; i < graphColIndex; i++) {
+      const w = visibleColumns[i].config.width;
+      if (typeof w === "number") offset += w;
+    }
+    return offset;
+  }, [visibleColumns, graphColIndex]);
+
+  // Graph rendering uses the original (non-sorted) commits in their stored order.
+  // When user applies a custom sort, the lane geometry no longer aligns with
+  // the displayed rows, so we hide the canvas overlay until sort is cleared.
+  const graphCommits = useMemo(() => rows.map((r) => r.commit), [rows]);
+
   return (
     <div ref={parentRef} className="relative h-full w-full overflow-auto">
-      <div
-        className="sticky top-0 z-30 bg-background border-b text-xs font-medium text-muted-foreground"
-        style={{ display: "grid", gridTemplateColumns: effectiveGridTemplate }}
-      >
-        {visibleColumns.map(({ def }) => (
-          <div key={def.id} className="px-2 h-9 flex items-center">
-            {def.label}
-          </div>
-        ))}
-      </div>
+      <CommitTableHeader headerGroups={table.getHeaderGroups()} gridTemplate={gridTemplate} />
 
       <div style={{ height: totalSize, position: "relative" }}>
-        {/* Canvas overlay positioned at the graph column */}
-        {graphColIndex >= 0 && (
+        {graphColIndex >= 0 && !isCustomSorted && (
           <div
             className="absolute pointer-events-auto"
             style={{
               top: 0,
-              left: visibleColumns.slice(0, graphColIndex).reduce((acc, c) => {
-                if (typeof c.config.width === "number") return acc + c.config.width;
-                return acc;
-              }, 0),
+              left: canvasLeftOffset,
               width: graphWidth,
               height: totalSize,
             }}
           >
             <CommitGraph
-              commits={rows.map((r) => r.commit)}
+              commits={graphCommits}
               rowHeight={effectiveRowHeight}
               visibleRange={visibleRange}
               onSelect={handleSelect}
@@ -169,44 +296,24 @@ export const CommitTable: React.FC<CommitTableProps> = ({
         )}
 
         {items.map((vi) => {
-          const row = rows[vi.index];
-          const isSelected = row.commit.hash === selectedHash;
+          const row = sortedRows[vi.index];
+          if (!row) return null;
+          const isSelected = row.original.commit.hash === selectedHash;
           return (
-            <CommitContextMenu key={row.commit.hash} commit={row.commit}>
-              <div
-                className="absolute left-0 right-0 cursor-pointer gitviz-row"
-                data-selected={isSelected ? "true" : undefined}
-                style={{
-                  top: vi.start,
-                  height: vi.size,
-                  display: "grid",
-                  gridTemplateColumns: effectiveGridTemplate,
-                  alignItems: "center",
-                }}
-                onClick={() => handleSelect(row.commit.hash)}
-                data-testid="commit-row"
-              >
-                {visibleColumns.map(({ config, def }) => {
-                  if (def.id === "graph") {
-                    return <div key={def.id} className="h-full" />;
-                  }
-                  const ColumnComp = def.Component;
-                  return (
-                    <div key={def.id} className="px-2 overflow-hidden text-sm">
-                      <ColumnComp
-                        row={row}
-                        context={{ refsInline: !!config.refsInline, ...config }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </CommitContextMenu>
+            <CommitTableRow
+              key={row.original.commit.hash}
+              row={row}
+              virtualItem={vi}
+              virtualizer={virtualizer}
+              gridTemplate={gridTemplate}
+              isSelected={isSelected}
+              onSelect={handleSelect}
+            />
           );
         })}
       </div>
 
-      {!loading && rows.length === 0 && (
+      {!loading && sortedRows.length === 0 && (
         <div className="text-center text-muted-foreground p-8">No commits found</div>
       )}
     </div>

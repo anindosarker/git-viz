@@ -1,6 +1,7 @@
 import type { ColumnConfig, ColumnId } from "@/graph/columns/types";
 import { getPreset } from "@/graph/presets/registry";
 import type { RefDisplay } from "@/graph/presets/types";
+import type { SortingState } from "@tanstack/react-table";
 import type {
   CommitFilter,
   CommitsGetPageResponse,
@@ -51,6 +52,7 @@ interface ViewSlice {
   showWorkingTree: boolean;
   topoOrder: boolean;
   pageSize: number;
+  sorting: SortingState;
   setPreset: (id: string) => void;
   setAlgorithm: (id: string) => void;
   setRenderer: (id: string) => void;
@@ -62,6 +64,7 @@ interface ViewSlice {
   setShowWorkingTree: (v: boolean) => void;
   setTopoOrder: (v: boolean) => void;
   setPageSize: (n: number) => void;
+  setSorting: (s: SortingState) => void;
   applyConfig: (values: Record<string, unknown>) => void;
 }
 
@@ -122,6 +125,20 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: "author", visible: true, width: 200 },
   { id: "hash", visible: true, width: 80 },
 ];
+
+function normalizeSorting(raw: unknown): SortingState | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: SortingState = [];
+  for (const item of raw) {
+    if (item && typeof item === "object" && typeof (item as { id?: unknown }).id === "string") {
+      out.push({
+        id: (item as { id: string }).id,
+        desc: !!(item as { desc?: boolean }).desc,
+      });
+    }
+  }
+  return out;
+}
 
 function normalizeColumns(raw: unknown): ColumnConfig[] | undefined {
   if (!Array.isArray(raw)) return undefined;
@@ -197,6 +214,7 @@ export const useStore = create<Store>()((set, get) => ({
   showWorkingTree: true,
   topoOrder: true,
   pageSize: 500,
+  sorting: normalizeSorting(initial.sorting) ?? [],
   setPreset: (presetId) => {
     const preset = getPreset(presetId as never);
     if (!preset) {
@@ -225,6 +243,7 @@ export const useStore = create<Store>()((set, get) => ({
   setShowWorkingTree: (showWorkingTree) => set({ showWorkingTree }),
   setTopoOrder: (topoOrder) => set({ topoOrder }),
   setPageSize: (pageSize) => set({ pageSize }),
+  setSorting: (sorting) => set({ sorting }),
   applyConfig: (values) =>
     set((state) => {
       const next: Partial<Store> = {};
@@ -343,6 +362,7 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "refDisplay",
   "rowHeight",
   "columns",
+  "sorting",
   "detailsHeight",
   "query",
   "queryRegex",

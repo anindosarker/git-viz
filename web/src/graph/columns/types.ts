@@ -34,4 +34,5 @@ export interface ColumnDefinition {
   label: string;
   defaultWidth: number | "flex";
   Component: React.FC<ColumnRendererProps>;
+  sortable?: boolean;
 }

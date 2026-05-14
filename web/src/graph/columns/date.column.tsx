@@ -42,6 +42,7 @@ export const dateColumn: ColumnDefinition = {
   label: "Date",
   defaultWidth: 150,
   Component,
+  sortable: true,
 };
 
 registerColumn(dateColumn);

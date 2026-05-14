@@ -50,6 +50,7 @@ export const changesColumn: ColumnDefinition = {
   label: "Changes",
   defaultWidth: 180,
   Component,
+  sortable: true,
 };
 
 registerColumn(changesColumn);

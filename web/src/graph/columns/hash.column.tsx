@@ -27,6 +27,7 @@ export const hashColumn: ColumnDefinition = {
   label: "Hash",
   defaultWidth: 80,
   Component,
+  sortable: true,
 };
 
 registerColumn(hashColumn);

@@ -26,6 +26,7 @@ export const authorColumn: ColumnDefinition = {
   label: "Author",
   defaultWidth: 200,
   Component,
+  sortable: true,
 };
 
 registerColumn(authorColumn);

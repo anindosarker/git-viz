@@ -16,6 +16,7 @@ export interface PersistedState {
   refDisplay?: string;
   rowHeight?: number;
   columns?: unknown;
+  sorting?: unknown;
   detailsHeight?: number;
   query?: string;
   queryRegex?: boolean;
