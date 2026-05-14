@@ -18,8 +18,15 @@
   /* Row backgrounds */
   --gitviz-row-bg: transparent;
   --gitviz-row-bg-hover: var(--vscode-list-hoverBackground);
-  --gitviz-row-bg-selected: var(--vscode-list-activeSelectionBackground);
-  --gitviz-row-bg-selected-inactive: var(--vscode-list-inactiveSelectionBackground);
+  /* Use the softer inactive selection background (a subtle grey in Dark+)
+   * instead of the saturated activeSelection blue so commit text stays
+   * readable. Focus is signalled by a left-edge accent border. */
+  --gitviz-row-bg-selected: var(--vscode-list-inactiveSelectionBackground);
+  --gitviz-row-bg-selected-hover: color-mix(
+    in srgb,
+    var(--vscode-list-inactiveSelectionBackground) 70%,
+    var(--vscode-list-hoverBackground)
+  );
   --gitviz-row-focus-border: var(--vscode-focusBorder);
 
   /* Backwards-compat aliases (older naming) */
@@ -78,17 +85,16 @@
 /* Row hover and selection states — matches VS Code list patterns. */
 .gitviz-row {
   background-color: var(--gitviz-row-bg);
-  border-left: 2px solid transparent;
 }
 .gitviz-row:hover {
   background-color: var(--gitviz-row-bg-hover);
 }
 .gitviz-row[data-selected="true"] {
   background-color: var(--gitviz-row-bg-selected);
-  border-left-color: var(--gitviz-row-focus-border);
+  box-shadow: inset 2px 0 0 var(--gitviz-row-focus-border);
 }
 .gitviz-row[data-selected="true"]:hover {
-  background-color: var(--gitviz-row-bg-selected);
+  background-color: var(--gitviz-row-bg-selected-hover);
 }
 
 /* Merge commits are de-emphasized (GitLens parity) */
