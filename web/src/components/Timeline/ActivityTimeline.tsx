@@ -1,4 +1,5 @@
 import { useStore } from "@/state/store";
+import { motion } from "framer-motion";
 import React from "react";
 
 interface Bucket {
@@ -96,7 +97,12 @@ export function ActivityTimeline() {
   const areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} ${height - padY} L ${points[0].x.toFixed(1)} ${height - padY} Z`;
 
   return (
-    <div className="border-b bg-muted/20 px-3 py-1.5 relative">
+    <motion.div
+      className="border-b bg-muted/20 px-3 py-1.5 relative"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
+    >
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
@@ -157,6 +163,6 @@ export function ActivityTimeline() {
           commit{points[hoverIdx].b.count === 1 ? "" : "s"}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
