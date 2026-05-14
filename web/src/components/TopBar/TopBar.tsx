@@ -1,5 +1,10 @@
+import { Button } from "@/components/ui/button";
+import { presetRegistry } from "@/graph";
+import "@/graph/presets/git-graph-like";
+import "@/graph/presets/gitlens-like";
+import "@/graph/presets/vscode-scm-graph-like";
+import { useStore } from "@/state/store";
 import { FolderGit2, GitBranch, RotateCw } from "lucide-react";
-import { Button } from "../ui/button";
 
 interface TopBarProps {
   repo: string;
@@ -9,6 +14,10 @@ interface TopBarProps {
 }
 
 export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
+  const presetId = useStore((s) => s.presetId);
+  const setPreset = useStore((s) => s.setPreset);
+  const presets = Array.from(presetRegistry.values());
+
   return (
     <div className="flex items-center justify-between bg-muted/40 p-2 border-b text-sm">
       <div className="flex items-center gap-4">
@@ -22,15 +31,31 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
           <span>{branch}</span>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onRefresh}
-        disabled={loading}
-        title="Refresh Log"
-      >
-        <RotateCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-      </Button>
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          Style
+          <select
+            value={presetId}
+            onChange={(e) => setPreset(e.target.value)}
+            className="bg-background border rounded-sm px-2 py-1 text-xs"
+          >
+            {presets.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          disabled={loading}
+          title="Refresh Log"
+        >
+          <RotateCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
     </div>
   );
 }

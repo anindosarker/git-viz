@@ -13,3 +13,5 @@ export { columnRegistry, getColumn, registerColumn } from "./columns/registry";
 
 export * from "./presets/types";
 export { presetRegistry, getPreset, registerPreset } from "./presets/registry";
+
+export { joinCommits, WORKING_TREE_HASH } from "./join";

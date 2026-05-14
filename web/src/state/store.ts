@@ -26,6 +26,7 @@ interface SelectionSlice {
 }
 
 import type { ColumnConfig } from "@/graph/columns/types";
+import { getPreset } from "@/graph/presets/registry";
 import type { RefDisplay } from "@/graph/presets/types";
 
 interface ViewSlice {
@@ -82,7 +83,21 @@ export const useStore = create<Store>()((set) => ({
     { id: "hash", visible: true, width: 80 },
   ],
   refDisplay: "inline",
-  setPreset: (presetId) => set({ presetId }),
+  setPreset: (presetId) => {
+    const preset = getPreset(presetId as never);
+    if (!preset) {
+      set({ presetId });
+      return;
+    }
+    set({
+      presetId,
+      algorithmId: preset.algorithmId,
+      rendererId: preset.rendererId,
+      rowHeight: preset.defaultRowHeight,
+      columns: preset.defaultColumns.map((c) => ({ ...c })),
+      refDisplay: preset.defaultRefDisplay,
+    });
+  },
   setAlgorithm: (algorithmId) => set({ algorithmId }),
   setRenderer: (rendererId) => set({ rendererId }),
   setRowHeight: (rowHeight) => set({ rowHeight }),
