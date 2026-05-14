@@ -1,17 +1,36 @@
-import type { GitCommit as CoreGitCommit } from "@git-viz/shared";
+import type {
+  DiffHunk,
+  GitBranch,
+  GitCommitDetails,
+  GitCommitSummary,
+  GitFileChange,
+  GitHeadState,
+  GitRefPointer,
+  GitRefsSnapshot,
+  GitRemote,
+  GitRepoInfo,
+  GitStash,
+  GitTag,
+} from "@git-viz/shared";
 
-export interface GitCommit extends CoreGitCommit {
+export type {
+  DiffHunk,
+  GitBranch,
+  GitCommitDetails,
+  GitCommitSummary,
+  GitFileChange,
+  GitHeadState,
+  GitRefPointer,
+  GitRefsSnapshot,
+  GitRemote,
+  GitRepoInfo,
+  GitStash,
+  GitTag,
+};
+
+export interface CommitRow extends GitCommitSummary {
   color?: string;
-  authorAvatar?: string; // Optional: URL to author's avatar image
-  body?: string; // Full commit message body
-  stats?: {
-    files: number;
-    additions: number;
-    deletions: number;
-  };
-}
-
-export interface GitLogResponse {
-  command: "responseLog";
-  data: GitCommit[];
+  authorAvatar?: string;
+  refs: GitRefPointer[];
+  kind?: "HEAD" | "node" | "working-tree" | "stash";
 }

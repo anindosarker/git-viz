@@ -1,4 +1,4 @@
-import type { GitCommit } from "@/types/git";
+import type { CommitRow } from "@/types/git";
 import type { WebviewApi } from "vscode-webview";
 
 class GitDataService {
@@ -10,7 +10,7 @@ class GitDataService {
     }
   }
 
-  getLog(): Promise<GitCommit[]> {
+  getLog(): Promise<CommitRow[]> {
     return new Promise((resolve) => {
       if (!this.vscode) {
         // Fetch from local server for development

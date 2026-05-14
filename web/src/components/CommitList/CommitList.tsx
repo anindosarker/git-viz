@@ -1,4 +1,4 @@
-import type { GitCommit } from "@/types/git";
+import type { CommitRow } from "@/types/git";
 import {
   flexRender,
   getCoreRowModel,
@@ -21,7 +21,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/ta
 import { columns } from "./columns";
 
 interface CommitListProps {
-  commits: GitCommit[];
+  commits: CommitRow[];
   rowHeight: number;
   loading: boolean;
 }
@@ -168,7 +168,7 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
                     inset
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigator.clipboard.writeText(row.original.message);
+                      navigator.clipboard.writeText(row.original.subject);
                     }}
                   >
                     Copy Message
