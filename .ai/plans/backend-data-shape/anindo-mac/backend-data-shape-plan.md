@@ -142,7 +142,7 @@ All endpoints both sides — VS Code `WebviewMessageHandler` and standalone `ser
 | Endpoint                   | Request                                                            | Response                                                                |
 | -------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | `repo:getInfo`             | `{}`                                                               | `GitRepoInfo`                                                           |
-| `commits:getPage`          | `{ cursor?: string, limit: number, refs?: string[] }`              | `{ commits: GitCommitSummary[], nextCursor?: string, hasMore: boolean }` |
+| `commits:getPage`          | `{ cursor?: string, limit: number, refs?: string[], order?: 'topo' \| 'date' }` | `{ commits: GitCommitSummary[], nextCursor?: string, hasMore: boolean }` |
 | `commits:getDetails`       | `{ hash: string }`                                                 | `GitCommitDetails`                                                      |
 | `commits:getFileChanges`   | `{ hash: string }`                                                 | `{ files: GitFileChange[], truncated: boolean }`                        |
 | `refs:getAll`              | `{ includeRemote?: boolean }`                                      | `GitRefsSnapshot`                                                       |
@@ -158,7 +158,7 @@ Worktrees + submodules deferred (plan 5).
 ## Backend service changes
 
 - `GitLogService` →
-  - `getCommitsPage(cwd, cursor?, limit)` — `git log --all --format=...%x00 -z` + cursor anchoring (`<cursor>^@..` or rev-list with `--skip` past cursor). No embedded refs.
+  - `getCommitsPage(cwd, cursor?, limit, order?)` — `git log --all --format=...%x00 -z` + cursor anchoring (`<cursor>^@..` or rev-list with `--skip` past cursor). Passes `--topo-order` when `order='topo'`, `--date-order` (default) otherwise. No embedded refs.
   - `getCommitDetails(cwd, hash)` — `git show --no-patch --format=...` for body + `git verify-commit --raw` for signature (lazy, only on details) + `git show --shortstat` for stats summary
   - `getFileChanges(cwd, hash)` — `git show --name-status --numstat` parsed into `GitFileChange[]`
   - NUL-delimited parser; tolerant of multiline subjects/bodies
