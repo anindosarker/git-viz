@@ -1,4 +1,5 @@
 import type { WebviewApi } from "vscode-webview";
+import { getVsCodeApi } from "./vscodeApi";
 
 export interface Transport {
   request<T>(command: string, payload?: unknown): Promise<T>;
@@ -129,15 +130,10 @@ export class StandaloneTransport implements Transport {
   }
 }
 
-declare global {
-  interface Window {
-    acquireVsCodeApi?: () => WebviewApi<unknown>;
-  }
-}
-
 export function makeTransport(): Transport {
-  if (typeof window !== "undefined" && typeof window.acquireVsCodeApi === "function") {
-    return new VSCodeTransport(window.acquireVsCodeApi());
+  const api = getVsCodeApi();
+  if (api) {
+    return new VSCodeTransport(api);
   }
   return new StandaloneTransport();
 }

@@ -20,7 +20,7 @@ export interface CommitsPageRequest {
 }
 
 export class GitService {
-  private readonly transport: Transport;
+  public readonly transport: Transport;
 
   constructor(transport: Transport) {
     this.transport = transport;
