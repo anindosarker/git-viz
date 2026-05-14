@@ -17,8 +17,11 @@ export class GitBranchService {
 
     // Record terminator: newline (default). Field separator: NUL via %00.
     // Refs cannot contain newlines, so plain line splitting is safe.
+    // We include the full `refname` so we can reliably classify local vs
+    // remote-tracking — short names alone are ambiguous for branches like
+    // "antigravity/menu" (a local branch containing a slash).
     const format =
-      "%(refname:short)%00%(objectname)%00%(HEAD)%00%(upstream:short)%00%(committerdate:iso-strict)";
+      "%(refname)%00%(refname:short)%00%(objectname)%00%(HEAD)%00%(upstream:short)%00%(committerdate:iso-strict)";
 
     const buf = await GitExecutor.execBuffer(cwd, [
       "for-each-ref",
@@ -33,16 +36,14 @@ export class GitBranchService {
 
     for (const line of raw.split("\n")) {
       if (!line) continue;
-      const [name, tip, headMark, upstream, date] = line.split(FIELD_SEP);
-      if (!name || !tip) continue;
+      const [fullRef, name, tip, headMark, upstream, date] =
+        line.split(FIELD_SEP);
+      if (!fullRef || !name || !tip) continue;
 
       // Skip the symbolic remote HEAD pointer (e.g. "origin/HEAD" -> "origin/main").
-      if (name.endsWith("/HEAD")) continue;
+      if (fullRef.endsWith("/HEAD")) continue;
 
-      // for-each-ref returns the short name; remote-tracking branches look like
-      // "origin/foo" while locals look like "foo". A "/" in the short name is a
-      // reliable signal for remote-tracking refs given the refspecs above.
-      const isRemote = name.includes("/");
+      const isRemote = fullRef.startsWith("refs/remotes/");
 
       const branch: GitBranch = {
         name,
