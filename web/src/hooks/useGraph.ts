@@ -1,22 +1,27 @@
-import { rollingAlgorithm } from "@/graph";
-import type { GitCommitSummary } from "@git-viz/shared";
+import { getAlgorithm, rollingAlgorithm } from "@/graph";
 import { useMemo } from "react";
+import { useStore } from "../state/store";
 
 interface UseGraphOptions {
   rowHeight?: number;
   laneWidth?: number;
 }
 
-export const useGraph = (commits: GitCommitSummary[], options: UseGraphOptions = {}) => {
-  const { rowHeight = 24, laneWidth = 20 } = options;
+export const useGraph = (options: UseGraphOptions = {}) => {
+  const { laneWidth = 20 } = options;
+  const commits = useStore((s) => s.commits);
+  const presetRowHeight = useStore((s) => s.rowHeight);
+  const presetId = useStore((s) => s.presetId);
+  const rowHeight = options.rowHeight ?? presetRowHeight;
 
   return useMemo(() => {
-    const result = rollingAlgorithm.compute({ commits, rowHeight, laneWidth });
+    const algo = getAlgorithm(presetId) ?? rollingAlgorithm;
+    const result = algo.compute({ commits, rowHeight, laneWidth });
     return {
       rows: result.rows,
+      laneCount: result.laneCount,
       height: commits.length * rowHeight,
       width: result.laneCount * laneWidth + 40,
-      laneCount: result.laneCount,
     };
-  }, [commits, rowHeight, laneWidth]);
+  }, [commits, rowHeight, laneWidth, presetId]);
 };
