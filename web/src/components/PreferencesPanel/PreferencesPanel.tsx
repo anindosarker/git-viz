@@ -1,16 +1,24 @@
+import type { ColumnConfig } from "@/graph/columns/types";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { useEffect } from "react";
 import { setConfigKey } from "../../hooks/useConfigBridge";
 import { useStore, type DateFormat, type RefDisplay } from "../../state/store";
 import { Button } from "../ui/button";
 
-const DEFAULT_COLUMNS = ["graph", "subject", "refs", "author", "date", "hash"];
+const DEFAULT_COLUMNS: ColumnConfig[] = [
+  { id: "graph", visible: true, width: "flex" },
+  { id: "subject", visible: true, width: "flex", refsInline: true },
+  { id: "date", visible: true, width: 150 },
+  { id: "author", visible: true, width: 200 },
+  { id: "hash", visible: true, width: 80 },
+];
 
 export function PreferencesPanel() {
   const open = useStore((s) => s.preferencesOpen);
   const setOpen = useStore((s) => s.setPreferencesOpen);
   const columns = useStore((s) => s.columns);
   const setColumns = useStore((s) => s.setColumns);
+  const toggleColumn = useStore((s) => s.toggleColumn);
   const refDisplay = useStore((s) => s.refDisplay);
   const setRefDisplay = useStore((s) => s.setRefDisplay);
   const dateFormat = useStore((s) => s.dateFormat);
@@ -38,6 +46,12 @@ export function PreferencesPanel() {
     void setConfigKey("columns", next);
   };
 
+  const handleToggle = (id: ColumnConfig["id"]) => {
+    toggleColumn(id);
+    const nextCols = columns.map((c) => (c.id === id ? { ...c, visible: !c.visible } : c));
+    void setConfigKey("columns", nextCols);
+  };
+
   const updateRefDisplay = (v: RefDisplay) => {
     setRefDisplay(v);
     void setConfigKey("refDisplay", v);
@@ -51,8 +65,9 @@ export function PreferencesPanel() {
     void setConfigKey("showWorkingTree", v);
   };
   const resetColumns = () => {
-    setColumns(DEFAULT_COLUMNS);
-    void setConfigKey("columns", DEFAULT_COLUMNS);
+    const fresh = DEFAULT_COLUMNS.map((c) => ({ ...c }));
+    setColumns(fresh);
+    void setConfigKey("columns", fresh);
   };
 
   return (
@@ -87,15 +102,23 @@ export function PreferencesPanel() {
             </div>
             <ul className="border rounded divide-y">
               {columns.map((col, i) => (
-                <li key={col} className="flex items-center justify-between px-2 py-1">
-                  <span className="capitalize">{col}</span>
+                <li key={col.id} className="flex items-center justify-between px-2 py-1">
+                  <label className="flex items-center gap-2 capitalize">
+                    <input
+                      type="checkbox"
+                      checked={col.visible}
+                      onChange={() => handleToggle(col.id)}
+                      aria-label={`Toggle ${col.id}`}
+                    />
+                    {col.id}
+                  </label>
                   <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => move(i, -1)}
                       disabled={i === 0}
                       className="p-1 disabled:opacity-30"
-                      aria-label={`Move ${col} up`}
+                      aria-label={`Move ${col.id} up`}
                     >
                       <ChevronUp className="h-3 w-3" />
                     </button>
@@ -104,7 +127,7 @@ export function PreferencesPanel() {
                       onClick={() => move(i, 1)}
                       disabled={i === columns.length - 1}
                       className="p-1 disabled:opacity-30"
-                      aria-label={`Move ${col} down`}
+                      aria-label={`Move ${col.id} down`}
                     >
                       <ChevronDown className="h-3 w-3" />
                     </button>

@@ -28,9 +28,4 @@ export type {
   GitTag,
 };
 
-export interface CommitRow extends GitCommitSummary {
-  color?: string;
-  authorAvatar?: string;
-  refs: GitRefPointer[];
-  kind?: "HEAD" | "node" | "working-tree" | "stash";
-}
+export type { CommitRow } from "@/graph/types";

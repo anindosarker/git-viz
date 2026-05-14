@@ -15,7 +15,7 @@ export interface PersistedState {
   presetId?: string;
   refDisplay?: string;
   rowHeight?: number;
-  columns?: string[];
+  columns?: unknown;
 }
 
 export interface PersistAdapter {
