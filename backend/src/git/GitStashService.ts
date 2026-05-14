@@ -14,20 +14,19 @@ export class GitStashService {
   public static async list(cwd: string): Promise<GitStash[]> {
     const format = "%H%x00%gd%x00%gs%x00%ci";
 
-    const buf = await GitExecutor.execBuffer(cwd, [
-      "stash",
-      "list",
-      `--format=${format}`,
-      "-z",
-    ]);
+    const buf = await GitExecutor.execBuffer(cwd, ["stash", "list", `--format=${format}`, "-z"]);
 
     const raw = buf.toString("utf8");
-    if (!raw) {return [];}
+    if (!raw) {
+      return [];
+    }
 
     const FIELD_COUNT = 4;
     const tokens = raw.split(FIELD_SEP);
     // `-z` adds a trailing NUL after the final record; drop the empty tail.
-    if (tokens.length && tokens[tokens.length - 1] === "") {tokens.pop();}
+    if (tokens.length && tokens[tokens.length - 1] === "") {
+      tokens.pop();
+    }
 
     const stashes: GitStash[] = [];
     for (let i = 0; i + FIELD_COUNT - 1 < tokens.length; i += FIELD_COUNT) {
@@ -35,7 +34,9 @@ export class GitStashService {
       const name = tokens[i + 1];
       const message = tokens[i + 2];
       const date = tokens[i + 3];
-      if (!hash || !name) {continue;}
+      if (!hash || !name) {
+        continue;
+      }
       stashes.push({ name, hash, message: message ?? "", date: date ?? "" });
     }
 

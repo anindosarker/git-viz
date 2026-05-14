@@ -9,10 +9,7 @@ export class GitActionHandler {
   }
 
   private async getRootPath(): Promise<string | undefined> {
-    if (
-      vscode.workspace.workspaceFolders &&
-      vscode.workspace.workspaceFolders.length > 0
-    ) {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
       return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
     vscode.window.showErrorMessage("No workspace folder open");
@@ -56,9 +53,7 @@ export class GitActionHandler {
         if (branchName) {
           await GitService.createBranch(rootPath, branchName, commitHash);
           await GitService.checkout(rootPath, branchName);
-          vscode.window.showInformationMessage(
-            `Created and checked out branch ${branchName}`
-          );
+          vscode.window.showInformationMessage(`Created and checked out branch ${branchName}`);
         }
       }
       this._webview.postMessage({ command: "refreshLog" });
@@ -104,19 +99,13 @@ export class GitActionHandler {
       try {
         if (selection.label.includes("Switch to Branch")) {
           await GitService.checkout(rootPath, branchName);
-          vscode.window.showInformationMessage(
-            `Checked out branch ${branchName}`
-          );
+          vscode.window.showInformationMessage(`Checked out branch ${branchName}`);
           this._webview.postMessage({ command: "refreshLog" });
         } else if (selection.label.includes("Create Worktree")) {
-          vscode.window.showInformationMessage(
-            "Worktree creation is not yet implemented."
-          );
+          vscode.window.showInformationMessage("Worktree creation is not yet implemented.");
         }
       } catch (e: any) {
-        vscode.window.showErrorMessage(
-          `Failed to checkout branch: ${e.message}`
-        );
+        vscode.window.showErrorMessage(`Failed to checkout branch: ${e.message}`);
       }
     });
 

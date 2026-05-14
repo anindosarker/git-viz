@@ -6,10 +6,7 @@ interface CommitDetailsProps {
   contentPaddingLeft?: number;
 }
 
-export const CommitDetails: React.FC<CommitDetailsProps> = ({
-  commit,
-  contentPaddingLeft = 0,
-}) => {
+export const CommitDetails: React.FC<CommitDetailsProps> = ({ commit, contentPaddingLeft = 0 }) => {
   return (
     <div
       className="p-4 bg-background border-b text-sm font-mono"
@@ -36,9 +33,7 @@ export const CommitDetails: React.FC<CommitDetailsProps> = ({
         <div className="select-all">{commit.date}</div>
       </div>
 
-      <div className="mt-4 whitespace-pre-wrap select-text">
-        {commit.body || commit.message}
-      </div>
+      <div className="mt-4 whitespace-pre-wrap select-text">{commit.body || commit.message}</div>
     </div>
   );
 };

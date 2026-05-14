@@ -87,64 +87,22 @@ describe("parseCommitRecord", () => {
   });
 
   it("handles a leading newline left over from -z", () => {
-    const rec =
-      "\n" +
-      buildCommitRecord([
-        "h",
-        "",
-        "A",
-        "a@x",
-        "2024",
-        "A",
-        "a@x",
-        "2024",
-        "subj",
-      ]);
+    const rec = "\n" + buildCommitRecord(["h", "", "A", "a@x", "2024", "A", "a@x", "2024", "subj"]);
     const out = parseCommitRecord(rec);
     expect(out?.hash).toBe("h");
     expect(out?.parents).toEqual([]);
   });
 
   it("returns null when hash is missing", () => {
-    const rec = buildCommitRecord([
-      "",
-      "",
-      "A",
-      "a@x",
-      "2024",
-      "A",
-      "a@x",
-      "2024",
-      "subj",
-    ]);
+    const rec = buildCommitRecord(["", "", "A", "a@x", "2024", "A", "a@x", "2024", "subj"]);
     expect(parseCommitRecord(rec)).toBeNull();
   });
 });
 
 describe("parseCommitStream", () => {
   it("parses multiple commit records", () => {
-    const rec1 = buildCommitRecord([
-      "h1",
-      "",
-      "A",
-      "a@x",
-      "d1",
-      "A",
-      "a@x",
-      "d1",
-      "s1",
-    ]);
-    const rec2 = buildCommitRecord([
-      "h2",
-      "h1",
-      "B",
-      "b@x",
-      "d2",
-      "B",
-      "b@x",
-      "d2",
-      "s2",
-    ]);
+    const rec1 = buildCommitRecord(["h1", "", "A", "a@x", "d1", "A", "a@x", "d1", "s1"]);
+    const rec2 = buildCommitRecord(["h2", "h1", "B", "b@x", "d2", "B", "b@x", "d2", "s2"]);
     const out = parseCommitStream(`${rec1}${RS}${rec2}${RS}`);
     expect(out).toHaveLength(2);
     expect(out[0].hash).toBe("h1");
@@ -328,15 +286,7 @@ describe("parseUnifiedDiff", () => {
   });
 
   it("parses multiple hunks", () => {
-    const diff = [
-      "@@ -1 +1 @@",
-      "-a",
-      "+b",
-      "@@ -10,2 +10,2 @@",
-      " x",
-      "-y",
-      "+z",
-    ].join("\n");
+    const diff = ["@@ -1 +1 @@", "-a", "+b", "@@ -10,2 +10,2 @@", " x", "-y", "+z"].join("\n");
     const hunks = parseUnifiedDiff(diff);
     expect(hunks).toHaveLength(2);
     expect(hunks[0].oldLines).toBe(1);
@@ -346,12 +296,7 @@ describe("parseUnifiedDiff", () => {
   });
 
   it('skips "\\ No newline at end of file" markers', () => {
-    const diff = [
-      "@@ -1 +1 @@",
-      "-foo",
-      "\\ No newline at end of file",
-      "+bar",
-    ].join("\n");
+    const diff = ["@@ -1 +1 @@", "-foo", "\\ No newline at end of file", "+bar"].join("\n");
     const hunks = parseUnifiedDiff(diff);
     expect(hunks).toHaveLength(1);
     expect(hunks[0].lines).toEqual([

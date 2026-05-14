@@ -9,10 +9,7 @@ export class GitLogHandler {
   }
 
   private async getRootPath(): Promise<string | undefined> {
-    if (
-      vscode.workspace.workspaceFolders &&
-      vscode.workspace.workspaceFolders.length > 0
-    ) {
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
       return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
     vscode.window.showErrorMessage("No workspace folder open");

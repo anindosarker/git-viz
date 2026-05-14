@@ -22,12 +22,7 @@ export class WebviewMessageHandler {
     this._systemHandler = new SystemHandler();
 
     this._registry = new Map();
-    for (const h of [
-      ...repoHandlers,
-      ...commitsHandlers,
-      ...refsHandlers,
-      ...remotesHandlers,
-    ]) {
+    for (const h of [...repoHandlers, ...commitsHandlers, ...refsHandlers, ...remotesHandlers]) {
       this._registry.set(h.command, h);
     }
   }

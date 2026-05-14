@@ -4,12 +4,7 @@ import { RefBadge } from "../Badges/RefBadge";
 import { Author } from "./Author";
 import { CommitMessage } from "./CommitMessage";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const columnHelper = createColumnHelper<GitCommit>();
 
@@ -82,11 +77,7 @@ export const columns = [
   }),
   columnHelper.accessor("hash", {
     header: "Hash",
-    cell: (info) => (
-      <span className="font-mono text-xs">
-        {info.getValue().substring(0, 7)}
-      </span>
-    ),
+    cell: (info) => <span className="font-mono text-xs">{info.getValue().substring(0, 7)}</span>,
     size: 80,
   }),
   columnHelper.accessor("message", {
@@ -96,9 +87,7 @@ export const columns = [
   }),
   columnHelper.accessor("author", {
     header: "Author",
-    cell: (info) => (
-      <Author name={info.getValue()} email={info.row.original.email} />
-    ),
+    cell: (info) => <Author name={info.getValue()} email={info.row.original.email} />,
     size: 200,
   }),
   columnHelper.accessor("date", {

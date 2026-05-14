@@ -24,13 +24,11 @@ export class GitService {
    * the existing webview frontend. New code should call
    * `GitRepoService.getRepoInfo` directly for the full `GitRepoInfo`.
    */
-  public static async getRepoInfo(
-    cwd: string
-  ): Promise<{ repo: string; branch: string }> {
+  public static async getRepoInfo(cwd: string): Promise<{ repo: string; branch: string }> {
     const info = await GitRepoService.getRepoInfo(cwd);
     const branch = info.head.detached
       ? `(detached ${info.head.shortHash})`
-      : info.head.branch ?? "";
+      : (info.head.branch ?? "");
     return { repo: info.name, branch };
   }
 
@@ -60,10 +58,7 @@ export class GitService {
   /**
    * Deletes a branch.
    */
-  public static async deleteBranch(
-    cwd: string,
-    branch: string
-  ): Promise<string> {
+  public static async deleteBranch(cwd: string, branch: string): Promise<string> {
     return GitBranchService.deleteBranch(cwd, branch);
   }
 

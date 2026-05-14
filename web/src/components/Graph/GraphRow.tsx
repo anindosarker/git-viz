@@ -8,12 +8,7 @@ interface GraphRowProps {
   laneWidth: number;
 }
 
-export const GraphRow: React.FC<GraphRowProps> = ({
-  row,
-  rowHeight,
-  totalHeight,
-  laneWidth,
-}) => {
+export const GraphRow: React.FC<GraphRowProps> = ({ row, rowHeight, totalHeight, laneWidth }) => {
   const { commit, inputSwimlanes, outputSwimlanes } = row;
 
   // Dimensions
@@ -33,8 +28,8 @@ export const GraphRow: React.FC<GraphRowProps> = ({
     circleIndex < outputSwimlanes.length
       ? outputSwimlanes[circleIndex].color
       : circleIndex < inputSwimlanes.length
-      ? inputSwimlanes[circleIndex].color
-      : commit.color || "#888";
+        ? inputSwimlanes[circleIndex].color
+        : commit.color || "#888";
 
   const paths: React.ReactNode[] = [];
   let outputSwimlaneIndex = 0;
@@ -70,15 +65,7 @@ export const GraphRow: React.FC<GraphRowProps> = ({
           ].join(" ");
         }
 
-        paths.push(
-          <path
-            key={`merge-in-${i}`}
-            d={d}
-            stroke={color}
-            strokeWidth={2}
-            fill="none"
-          />
-        );
+        paths.push(<path key={`merge-in-${i}`} d={d} stroke={color} strokeWidth={2} fill="none" />);
       } else {
         outputSwimlaneIndex++;
       }
@@ -109,25 +96,13 @@ export const GraphRow: React.FC<GraphRowProps> = ({
           const d = [
             `M ${xInput} 0`,
             `V 6`,
-            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 1 : 0} ${
-              xInput + direction * safeR
-            } ${H_2}`,
+            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 1 : 0} ${xInput + direction * safeR} ${H_2}`,
             `H ${xOutput - direction * safeR}`,
-            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 0 : 1} ${xOutput} ${
-              H_2 + safeR
-            }`,
+            `A ${safeR} ${safeR} 0 0 ${direction > 0 ? 0 : 1} ${xOutput} ${H_2 + safeR}`,
             `V ${H}`,
           ].join(" ");
 
-          paths.push(
-            <path
-              key={`shift-${i}`}
-              d={d}
-              stroke={color}
-              strokeWidth={2}
-              fill="none"
-            />
-          );
+          paths.push(<path key={`shift-${i}`} d={d} stroke={color} strokeWidth={2} fill="none" />);
         }
 
         outputSwimlaneIndex++;
@@ -176,15 +151,7 @@ export const GraphRow: React.FC<GraphRowProps> = ({
       ].join(" ");
     }
 
-    paths.push(
-      <path
-        key={`merge-${p}`}
-        d={d}
-        stroke={color}
-        strokeWidth={2}
-        fill="none"
-      />
-    );
+    paths.push(<path key={`merge-${p}`} d={d} stroke={color} strokeWidth={2} fill="none" />);
   }
 
   // STEP 3: Draw vertical line TO the circle (from top)

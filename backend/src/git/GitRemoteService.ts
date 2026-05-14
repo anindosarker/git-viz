@@ -11,26 +11,37 @@ export class GitRemoteService {
    */
   public static async list(cwd: string): Promise<GitRemote[]> {
     const out = await GitExecutor.exec(cwd, ["remote", "-v"]);
-    if (!out) {return [];}
+    if (!out) {
+      return [];
+    }
 
     const map = new Map<string, { fetchUrl: string; pushUrl: string }>();
 
     for (const line of out.split("\n")) {
-      if (!line.trim()) {continue;}
+      if (!line.trim()) {
+        continue;
+      }
       // Format: <name>\t<url> (<role>)
       const tabIdx = line.indexOf("\t");
-      if (tabIdx === -1) {continue;}
+      if (tabIdx === -1) {
+        continue;
+      }
       const name = line.slice(0, tabIdx);
       const rest = line.slice(tabIdx + 1);
 
       const lastSpace = rest.lastIndexOf(" ");
-      if (lastSpace === -1) {continue;}
+      if (lastSpace === -1) {
+        continue;
+      }
       const url = rest.slice(0, lastSpace);
       const role = rest.slice(lastSpace + 1); // "(fetch)" or "(push)"
 
       const entry = map.get(name) ?? { fetchUrl: "", pushUrl: "" };
-      if (role === "(fetch)") {entry.fetchUrl = url;}
-      else if (role === "(push)") {entry.pushUrl = url;}
+      if (role === "(fetch)") {
+        entry.fetchUrl = url;
+      } else if (role === "(push)") {
+        entry.pushUrl = url;
+      }
       map.set(name, entry);
     }
 

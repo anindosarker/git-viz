@@ -17,13 +17,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "../ui/context-menu";
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { columns } from "./columns";
 
 interface CommitListProps {
@@ -32,11 +26,7 @@ interface CommitListProps {
   loading: boolean;
 }
 
-export const CommitList: React.FC<CommitListProps> = ({
-  commits,
-  rowHeight,
-  loading,
-}) => {
+export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, loading }) => {
   // Calculate graph layout to get width
   const { width: graphWidth } = React.useMemo(
     () => calculateGraph(commits, rowHeight),
@@ -84,10 +74,7 @@ export const CommitList: React.FC<CommitListProps> = ({
       <table className="w-full caption-bottom text-sm">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow
-              key={headerGroup.id}
-              className="h-12 bg-background z-20 relative"
-            >
+            <TableRow key={headerGroup.id} className="h-12 bg-background z-20 relative">
               {headerGroup.headers.map((header) => {
                 // Dynamic width for graph column
                 let widthStyle: React.CSSProperties = {
@@ -103,10 +90,7 @@ export const CommitList: React.FC<CommitListProps> = ({
                   <TableHead key={header.id} style={widthStyle}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 );
               })}
@@ -134,15 +118,8 @@ export const CommitList: React.FC<CommitListProps> = ({
                       }
 
                       return (
-                        <TableCell
-                          key={cell.id}
-                          className="py-0 align-middle"
-                          style={widthStyle}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                        <TableCell key={cell.id} className="py-0 align-middle" style={widthStyle}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       );
                     })}

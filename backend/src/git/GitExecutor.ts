@@ -15,11 +15,7 @@ export class GitExecutor {
   /**
    * Executes a git command in the given working directory and returns trimmed stdout.
    */
-  public static async exec(
-    cwd: string,
-    args: string[],
-    options?: ExecOptions
-  ): Promise<string> {
+  public static async exec(cwd: string, args: string[], options?: ExecOptions): Promise<string> {
     const buf = await GitExecutor.execBuffer(cwd, args, options);
     const s = buf.toString("utf8");
     // Preserve trailing NUL when binary (caller likely needs raw bytes); otherwise trim.
@@ -48,11 +44,7 @@ export class GitExecutor {
         if (stdoutLen > maxBuffer) {
           killed = true;
           child.kill("SIGKILL");
-          reject(
-            new Error(
-              `git ${args[0]} exceeded maxBuffer (${maxBuffer} bytes)`
-            )
-          );
+          reject(new Error(`git ${args[0]} exceeded maxBuffer (${maxBuffer} bytes)`));
           return;
         }
         stdoutChunks.push(chunk);
@@ -63,20 +55,20 @@ export class GitExecutor {
       });
 
       child.on("error", (err) => {
-        if (killed) {return;}
+        if (killed) {
+          return;
+        }
         reject(err);
       });
 
       child.on("close", (code) => {
-        if (killed) {return;}
+        if (killed) {
+          return;
+        }
         if (code === 0 || options.ignoreErrors) {
           resolve(Buffer.concat(stdoutChunks));
         } else {
-          reject(
-            new Error(
-              `git ${args.join(" ")} failed (exit ${code}): ${stderr.trim()}`
-            )
-          );
+          reject(new Error(`git ${args.join(" ")} failed (exit ${code}): ${stderr.trim()}`));
         }
       });
 

@@ -1,8 +1,4 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { CommitList } from "./components/CommitList/CommitList";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit.hook";
@@ -38,11 +34,7 @@ function GitGraphApp() {
 
       <div className="border rounded-md flex overflow-hidden grow">
         <div className="grow overflow-auto">
-          <CommitList
-            commits={commits}
-            rowHeight={rowHeight}
-            loading={loading}
-          />
+          <CommitList commits={commits} rowHeight={rowHeight} loading={loading} />
         </div>
       </div>
     </div>

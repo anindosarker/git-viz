@@ -49,8 +49,7 @@ export function calculateGraph(
     const commit = commits[i];
 
     // Get input swimlanes from previous commit's output
-    const inputSwimlanes: Swimlane[] =
-      i === 0 ? [] : [...rows[i - 1].outputSwimlanes];
+    const inputSwimlanes: Swimlane[] = i === 0 ? [] : [...rows[i - 1].outputSwimlanes];
 
     const outputSwimlanes: Swimlane[] = [];
 
@@ -114,9 +113,8 @@ export function calculateGraph(
     const commitColor =
       inputIndex !== -1
         ? inputSwimlanes[inputIndex].color
-        : (commit.parents.length > 0
-            ? colorMap.get(commit.parents[0])
-            : getNextColor()) || getNextColor();
+        : (commit.parents.length > 0 ? colorMap.get(commit.parents[0]) : getNextColor()) ||
+          getNextColor();
 
     rows.push({
       commit: { ...commit, color: commitColor },
@@ -129,11 +127,7 @@ export function calculateGraph(
     rows,
     height: commits.length * rowHeight,
     width:
-      Math.max(
-        ...rows.map((r) =>
-          Math.max(r.inputSwimlanes.length, r.outputSwimlanes.length)
-        )
-      ) *
+      Math.max(...rows.map((r) => Math.max(r.inputSwimlanes.length, r.outputSwimlanes.length))) *
         laneWidth +
       40,
   };

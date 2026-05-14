@@ -13,10 +13,7 @@ export const Author: React.FC<AuthorProps> = ({ name, email }) => {
         {getInitials(name)}
       </div>
       <div className="flex flex-col overflow-hidden">
-        <span
-          className="text-xs font-medium truncate"
-          title={`${name} <${email}>`}
-        >
+        <span className="text-xs font-medium truncate" title={`${name} <${email}>`}>
           {name}
         </span>
       </div>

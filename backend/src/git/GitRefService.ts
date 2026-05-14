@@ -9,10 +9,7 @@ export class GitRefService {
    * Aggregates branches, tags, stashes, and HEAD state into a single
    * GitRefsSnapshot. Underlying calls run in parallel.
    */
-  public static async getAll(
-    cwd: string,
-    includeRemote: boolean = true
-  ): Promise<GitRefsSnapshot> {
+  public static async getAll(cwd: string, includeRemote: boolean = true): Promise<GitRefsSnapshot> {
     const [branches, tags, stashes, repoInfo] = await Promise.all([
       GitBranchService.list(cwd, includeRemote),
       GitTagService.list(cwd),

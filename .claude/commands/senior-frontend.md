@@ -328,10 +328,10 @@ Centralized in `src/lib/constants/url.config.ts`:
 
 ```typescript
 export const APIUrl = {
-  base: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001',
+  base: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001",
   employee: {
-    getBalance: () => '/employee/balance',
-    getList: () => '/employee',
+    getBalance: () => "/employee/balance",
+    getList: () => "/employee",
     getDetail: (id: string) => `/employee/${id}`,
   },
 };
@@ -342,9 +342,9 @@ export const APIUrl = {
 One hook file per feature in `src/hooks/actions/use<Feature>Action.ts`:
 
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '@/lib/constants/query-keys';
-import employeeService from '@/lib/services/employee.service';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/lib/constants/query-keys";
+import employeeService from "@/lib/services/employee.service";
 
 export default function useEmployeeAction() {
   const queryClient = useQueryClient();
@@ -366,7 +366,7 @@ export default function useEmployeeAction() {
     mutationFn: employeeService.requestPayout,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.employee.getBalance] });
-      toast.success('Payout requested!');
+      toast.success("Payout requested!");
     },
   });
 
@@ -381,9 +381,9 @@ Centralized in `src/lib/constants/query-keys.ts` using dot-notation:
 ```typescript
 export const QUERY_KEYS = {
   employee: {
-    getBalance: 'employee.getBalance',
-    getList: 'employee.getList',
-    getDetail: 'employee.getDetail',
+    getBalance: "employee.getBalance",
+    getList: "employee.getList",
+    getDetail: "employee.getDetail",
   },
 };
 ```
@@ -393,12 +393,12 @@ export const QUERY_KEYS = {
 **Zod validators** in `src/lib/validators/<feature>.validator.ts`:
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 export const CreateEmployeeValidation = z.object({
-  firstName: z.string().trim().min(1, 'First name is required'),
-  lastName: z.string().trim().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email'),
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+  email: z.string().email("Invalid email"),
   position: z.string().optional(),
 });
 
@@ -598,10 +598,10 @@ return isLoading ? (
 ### Toast Notifications
 
 ```typescript
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
-toast.success('Payout requested!');
-toast.error('Something went wrong');
+toast.success("Payout requested!");
+toast.error("Something went wrong");
 ```
 
 Mutation errors are also auto-toasted globally via `MutationCache.onError` in the QueryClient config.

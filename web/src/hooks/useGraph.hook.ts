@@ -7,10 +7,7 @@ interface UseGraphOptions {
   laneWidth?: number;
 }
 
-export const useGraph = (
-  commits: GitCommit[],
-  options: UseGraphOptions = {}
-) => {
+export const useGraph = (commits: GitCommit[], options: UseGraphOptions = {}) => {
   const { rowHeight = 24, laneWidth = 20 } = options;
 
   const graphData = useMemo(() => {

@@ -8,10 +8,7 @@ export class GitRepoService {
    */
   public static async getRepoInfo(cwd: string): Promise<GitRepoInfo> {
     try {
-      const root = await GitExecutor.exec(cwd, [
-        "rev-parse",
-        "--show-toplevel",
-      ]);
+      const root = await GitExecutor.exec(cwd, ["rev-parse", "--show-toplevel"]);
       const name = path.basename(root);
       const head = await GitRepoService.getHeadState(root);
       const status = await GitExecutor.exec(root, [
@@ -38,10 +35,7 @@ export class GitRepoService {
    */
   public static async getRepoRoot(path: string): Promise<string | null> {
     try {
-      const root = await GitExecutor.exec(path, [
-        "rev-parse",
-        "--show-toplevel",
-      ]);
+      const root = await GitExecutor.exec(path, ["rev-parse", "--show-toplevel"]);
       return root;
     } catch {
       return null;
@@ -52,11 +46,7 @@ export class GitRepoService {
     const hash = await GitExecutor.exec(cwd, ["rev-parse", "HEAD"]);
     const shortHash = hash.slice(0, 7);
     try {
-      const symbolic = await GitExecutor.exec(cwd, [
-        "symbolic-ref",
-        "--quiet",
-        "HEAD",
-      ]);
+      const symbolic = await GitExecutor.exec(cwd, ["symbolic-ref", "--quiet", "HEAD"]);
       const branch = symbolic.replace(/^refs\/heads\//, "");
       return { detached: false, branch, hash, shortHash };
     } catch {

@@ -113,11 +113,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Serve Static Files
-  let filePath = path.join(
-    __dirname,
-    "dist",
-    req.url === "/" ? "index.html" : req.url
-  );
+  let filePath = path.join(__dirname, "dist", req.url === "/" ? "index.html" : req.url);
   const extname = path.extname(filePath);
   let contentType = MIME_TYPES[extname] || "application/octet-stream";
 
@@ -125,18 +121,15 @@ const server = http.createServer((req, res) => {
     if (err) {
       if (err.code === "ENOENT") {
         // Fallback to index.html for SPA routing (if needed, though mostly single page)
-        fs.readFile(
-          path.join(__dirname, "dist", "index.html"),
-          (err, content) => {
-            if (err) {
-              res.writeHead(404);
-              res.end("404 Not Found");
-            } else {
-              res.writeHead(200, { "Content-Type": "text/html" });
-              res.end(content);
-            }
+        fs.readFile(path.join(__dirname, "dist", "index.html"), (err, content) => {
+          if (err) {
+            res.writeHead(404);
+            res.end("404 Not Found");
+          } else {
+            res.writeHead(200, { "Content-Type": "text/html" });
+            res.end(content);
           }
-        );
+        });
       } else {
         res.writeHead(500);
         res.end(`Server Error: ${err.code}`);

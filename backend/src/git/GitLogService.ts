@@ -38,7 +38,9 @@ export class GitLogService {
     args.push(`--max-count=${limit + 1}`);
 
     const { revs, paths } = GitLogService.buildFilterArgs(filter);
-    for (const a of GitLogService.buildFilterFlags(filter)) {args.push(a);}
+    for (const a of GitLogService.buildFilterFlags(filter)) {
+      args.push(a);
+    }
 
     if (revs.length === 0) {
       if (cursor) {
@@ -50,30 +52,30 @@ export class GitLogService {
     } else {
       // Filter-supplied refs anchor traversal. Combine with cursor by limiting
       // to ancestors of cursor's parent: pass `<cursor>~1` AND the refs.
-      if (cursor) {revs.push(`${cursor}~1`);}
-      for (const r of revs) {args.push(r);}
+      if (cursor) {
+        revs.push(`${cursor}~1`);
+      }
+      for (const r of revs) {
+        args.push(r);
+      }
     }
 
     if (paths.length > 0) {
       args.push("--");
-      for (const p of paths) {args.push(p);}
+      for (const p of paths) {
+        args.push(p);
+      }
     }
 
     const buf = await GitExecutor.execBuffer(cwd, args);
     const all = parseCommitStream(buf);
     const hasMore = all.length > limit;
     const commits = hasMore ? all.slice(0, limit) : all;
-    const nextCursor =
-      hasMore && commits.length > 0
-        ? commits[commits.length - 1].hash
-        : undefined;
+    const nextCursor = hasMore && commits.length > 0 ? commits[commits.length - 1].hash : undefined;
     return { commits, nextCursor, hasMore };
   }
 
-  public static async getCommit(
-    cwd: string,
-    hash: string
-  ): Promise<GitCommitSummary | null> {
+  public static async getCommit(cwd: string, hash: string): Promise<GitCommitSummary | null> {
     try {
       const buf = await GitExecutor.execBuffer(cwd, [
         "log",
@@ -89,10 +91,7 @@ export class GitLogService {
     }
   }
 
-  public static async getCommitDetails(
-    cwd: string,
-    hash: string
-  ): Promise<GitCommitDetails> {
+  public static async getCommitDetails(cwd: string, hash: string): Promise<GitCommitDetails> {
     // %B = body (incl. subject), %G? = signature status code, %GS = signer.
     // Separate each with NUL so newlines inside the body don't confuse us.
     const showOut = await GitExecutor.execBuffer(cwd, [
@@ -107,12 +106,7 @@ export class GitLogService {
     const sigCode = (parts[1] ?? "").trim();
     const signer = (parts[2] ?? "").trim();
 
-    const shortstatRaw = await GitExecutor.exec(cwd, [
-      "show",
-      "--shortstat",
-      "--format=",
-      hash,
-    ]);
+    const shortstatRaw = await GitExecutor.exec(cwd, ["show", "--shortstat", "--format=", hash]);
     const stats = parseShortStat(shortstatRaw);
 
     return {
@@ -133,20 +127,8 @@ export class GitLogService {
     // `--name-status` / `--numstat` already suppress the patch body.
     // (Using `-s` / `--no-patch` here conflicts with these flags.)
     const [nameStatusBuf, numstatBuf] = await Promise.all([
-      GitExecutor.execBuffer(cwd, [
-        "show",
-        "--format=",
-        "-z",
-        "--name-status",
-        hash,
-      ]),
-      GitExecutor.execBuffer(cwd, [
-        "show",
-        "--format=",
-        "-z",
-        "--numstat",
-        hash,
-      ]),
+      GitExecutor.execBuffer(cwd, ["show", "--format=", "-z", "--name-status", hash]),
+      GitExecutor.execBuffer(cwd, ["show", "--format=", "-z", "--numstat", hash]),
     ]);
 
     const nameStatus = parseNameStatusZ(nameStatusBuf);
@@ -164,15 +146,10 @@ export class GitLogService {
   ): Promise<{ hunks: DiffHunk[] }> {
     // `git show <hash> -- <path>` handles both root commits (no parent) and
     // regular commits, and emits unified diff with a textconv-aware default.
-    const raw = await GitExecutor.exec(cwd, [
-      "show",
-      "--format=",
-      "--no-color",
-      hash,
-      "--",
-      path,
-    ]);
-    if (!raw) {return { hunks: [] };}
+    const raw = await GitExecutor.exec(cwd, ["show", "--format=", "--no-color", hash, "--", path]);
+    if (!raw) {
+      return { hunks: [] };
+    }
     // Binary files: git emits "Binary files a/x and b/x differ" instead of hunks.
     if (/^Binary files .* differ$/m.test(raw) && !/^@@/m.test(raw)) {
       return {
@@ -198,16 +175,27 @@ export class GitLogService {
   // ---- internal helpers ----
 
   private static buildFilterFlags(filter?: CommitFilter): string[] {
-    if (!filter) {return [];}
+    if (!filter) {
+      return [];
+    }
     const out: string[] = [];
     if (filter.query) {
       out.push(`--grep=${filter.query}`);
-      if (filter.queryRegex) {out.push("--extended-regexp");}
-      else {out.push("--regexp-ignore-case", "--fixed-strings");}
+      if (filter.queryRegex) {
+        out.push("--extended-regexp");
+      } else {
+        out.push("--regexp-ignore-case", "--fixed-strings");
+      }
     }
-    if (filter.author) {out.push(`--author=${filter.author}`);}
-    if (filter.since) {out.push(`--since=${filter.since}`);}
-    if (filter.until) {out.push(`--until=${filter.until}`);}
+    if (filter.author) {
+      out.push(`--author=${filter.author}`);
+    }
+    if (filter.since) {
+      out.push(`--since=${filter.since}`);
+    }
+    if (filter.until) {
+      out.push(`--until=${filter.until}`);
+    }
     return out;
   }
 
@@ -217,14 +205,15 @@ export class GitLogService {
   } {
     const revs: string[] = [];
     const paths: string[] = filter?.paths ? [...filter.paths] : [];
-    if (filter?.hash) {revs.push(filter.hash);}
-    else if (filter?.refs && filter.refs.length > 0) {revs.push(...filter.refs);}
+    if (filter?.hash) {
+      revs.push(filter.hash);
+    } else if (filter?.refs && filter.refs.length > 0) {
+      revs.push(...filter.refs);
+    }
     return { revs, paths };
   }
 
-  private static mapSignatureStatus(
-    code: string
-  ): GitCommitDetails["signature"]["status"] {
+  private static mapSignatureStatus(code: string): GitCommitDetails["signature"]["status"] {
     switch (code) {
       case "G":
         return "good";

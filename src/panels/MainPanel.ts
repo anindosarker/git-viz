@@ -32,10 +32,7 @@ export class MainPanel {
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     // Set the HTML content for the webview panel
-    this._panel.webview.html = this._getWebviewContent(
-      this._panel.webview,
-      extensionUri
-    );
+    this._panel.webview.html = this._getWebviewContent(this._panel.webview, extensionUri);
 
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
@@ -54,10 +51,7 @@ export class MainPanel {
     } else {
       // If a webview panel does not already exist create and show a new one
       let repoName = "git-viz";
-      if (
-        vscode.workspace.workspaceFolders &&
-        vscode.workspace.workspaceFolders.length > 0
-      ) {
+      if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
         repoName = vscode.workspace.workspaceFolders[0].name;
       }
 
@@ -91,12 +85,9 @@ export class MainPanel {
    * @param context The extension context
    */
   public static register(context: vscode.ExtensionContext) {
-    const command = vscode.commands.registerCommand(
-      "git-viz.showCommitGraph",
-      () => {
-        MainPanel.render(context.extensionUri);
-      }
-    );
+    const command = vscode.commands.registerCommand("git-viz.showCommitGraph", () => {
+      MainPanel.render(context.extensionUri);
+    });
     context.subscriptions.push(command);
   }
 
@@ -129,24 +120,11 @@ export class MainPanel {
    * @returns A template string literal containing the HTML that should be
    * rendered within the webview panel
    */
-  private _getWebviewContent(
-    webview: vscode.Webview,
-    extensionUri: vscode.Uri
-  ) {
+  private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
     // The CSS file from the React build output
-    const stylesUri = getUri(webview, extensionUri, [
-      "web",
-      "dist",
-      "assets",
-      "index.css",
-    ]);
+    const stylesUri = getUri(webview, extensionUri, ["web", "dist", "assets", "index.css"]);
     // The JS file from the React build output
-    const scriptUri = getUri(webview, extensionUri, [
-      "web",
-      "dist",
-      "assets",
-      "index.js",
-    ]);
+    const scriptUri = getUri(webview, extensionUri, ["web", "dist", "assets", "index.js"]);
 
     const nonce = getNonce();
 

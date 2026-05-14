@@ -17,18 +17,13 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
   expandedRows = {},
   detailHeight = 256, // Fixed height for details view
 }) => {
-  const { rows, width } = useMemo(
-    () => calculateGraph(commits, rowHeight),
-    [commits, rowHeight]
-  );
+  const { rows, width } = useMemo(() => calculateGraph(commits, rowHeight), [commits, rowHeight]);
 
   // Calculate dynamic Y positions
   const rowPositions = useMemo(() => {
     let currentY = 0;
     return rows.map((row) => {
-      const isExpanded = (expandedRows as Record<string, boolean>)[
-        row.commit.hash
-      ];
+      const isExpanded = (expandedRows as Record<string, boolean>)[row.commit.hash];
       const y = currentY;
       const height = rowHeight + (isExpanded ? detailHeight : 0);
       currentY += height;
@@ -38,8 +33,7 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
 
   const totalHeight =
     rowPositions.length > 0
-      ? rowPositions[rowPositions.length - 1].y +
-        rowPositions[rowPositions.length - 1].height
+      ? rowPositions[rowPositions.length - 1].y + rowPositions[rowPositions.length - 1].height
       : 0;
 
   return (
@@ -53,12 +47,7 @@ export const CommitGraph: React.FC<CommitGraphProps> = ({
         const { y, height } = rowPositions[index];
         return (
           <g key={row.commit.hash} transform={`translate(0, ${y})`}>
-            <GraphRow
-              row={row}
-              rowHeight={rowHeight}
-              totalHeight={height}
-              laneWidth={20}
-            />
+            <GraphRow row={row} rowHeight={rowHeight} totalHeight={height} laneWidth={20} />
           </g>
         );
       })}

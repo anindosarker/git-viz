@@ -7,13 +7,8 @@ export class GitBranchService {
   /**
    * Lists local + (optionally) remote branches with upstream tracking info.
    */
-  public static async list(
-    cwd: string,
-    includeRemote: boolean = true
-  ): Promise<GitBranch[]> {
-    const refspecs = includeRemote
-      ? ["refs/heads", "refs/remotes"]
-      : ["refs/heads"];
+  public static async list(cwd: string, includeRemote: boolean = true): Promise<GitBranch[]> {
+    const refspecs = includeRemote ? ["refs/heads", "refs/remotes"] : ["refs/heads"];
 
     // Record terminator: newline (default). Field separator: NUL via %00.
     // Refs cannot contain newlines, so plain line splitting is safe.
@@ -30,18 +25,25 @@ export class GitBranchService {
     ]);
 
     const raw = buf.toString("utf8");
-    if (!raw.trim()) {return [];}
+    if (!raw.trim()) {
+      return [];
+    }
 
     const branches: GitBranch[] = [];
 
     for (const line of raw.split("\n")) {
-      if (!line) {continue;}
-      const [fullRef, name, tip, headMark, upstream, date] =
-        line.split(FIELD_SEP);
-      if (!fullRef || !name || !tip) {continue;}
+      if (!line) {
+        continue;
+      }
+      const [fullRef, name, tip, headMark, upstream, date] = line.split(FIELD_SEP);
+      if (!fullRef || !name || !tip) {
+        continue;
+      }
 
       // Skip the symbolic remote HEAD pointer (e.g. "origin/HEAD" -> "origin/main").
-      if (fullRef.endsWith("/HEAD")) {continue;}
+      if (fullRef.endsWith("/HEAD")) {
+        continue;
+      }
 
       const isRemote = fullRef.startsWith("refs/remotes/");
 
@@ -82,7 +84,9 @@ export class GitBranchService {
       const [aheadStr, behindStr] = out.split(/\s+/);
       const ahead = Number.parseInt(aheadStr, 10);
       const behind = Number.parseInt(behindStr, 10);
-      if (Number.isNaN(ahead) || Number.isNaN(behind)) {return null;}
+      if (Number.isNaN(ahead) || Number.isNaN(behind)) {
+        return null;
+      }
       return { ahead, behind };
     } catch {
       return null;
@@ -99,10 +103,7 @@ export class GitBranchService {
   /**
    * Deletes a branch.
    */
-  public static async deleteBranch(
-    cwd: string,
-    branch: string
-  ): Promise<string> {
+  public static async deleteBranch(cwd: string, branch: string): Promise<string> {
     return GitExecutor.exec(cwd, ["branch", "-D", branch]);
   }
 

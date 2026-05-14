@@ -8,12 +8,7 @@ export interface WebviewRequest {
 
 export interface CommandHandler {
   command: string;
-  handle(
-    payload: any,
-    cwd: string,
-    webview: vscode.Webview,
-    requestId?: string
-  ): Promise<void>;
+  handle(payload: any, cwd: string, webview: vscode.Webview, requestId?: string): Promise<void>;
 }
 
 export function postResponse(

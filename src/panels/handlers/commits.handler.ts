@@ -21,8 +21,7 @@ function makeHandler(
 }
 
 const getPage = makeHandler("commits:getPage", (p, cwd) => {
-  const limit =
-    typeof p.limit === "number" && p.limit > 0 ? p.limit : 500;
+  const limit = typeof p.limit === "number" && p.limit > 0 ? p.limit : 500;
   const order: "topo" | "date" = p.order === "topo" ? "topo" : "date";
   return GitLogService.getCommitsPage(cwd, p.cursor, limit, order, p.filter);
 });
@@ -39,9 +38,7 @@ const getFileDiff = makeHandler("commits:getFileDiff", (p, cwd) =>
   GitLogService.getFileDiff(cwd, p.hash, p.path)
 );
 
-const getPatch = makeHandler("commits:getPatch", (p, cwd) =>
-  GitLogService.getPatch(cwd, p.hash)
-);
+const getPatch = makeHandler("commits:getPatch", (p, cwd) => GitLogService.getPatch(cwd, p.hash));
 
 const getCommit = makeHandler("commits:getCommit", (p, cwd) =>
   GitLogService.getCommit(cwd, p.hash)
