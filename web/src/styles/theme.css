@@ -1,15 +1,92 @@
 /*
- * Theme tokens shared by the React DOM and the canvas graph renderer.
- * Each token maps to a VS Code SCM Graph token when available; otherwise
- * the fallback hex is used (standalone mode or hosts without the token).
+ * gitviz UI tokens. Each --gitviz-* alias resolves to a VS Code semantic token
+ * with a sensible fallback (the fallbacks themselves are also aliases declared
+ * in index.css against VS Code Dark+ defaults for standalone mode).
+ *
+ * Add new UI surfaces here so React DOM, the canvas graph renderer, and any
+ * downstream consumer share the same source of truth.
  */
 :root {
-  --gitviz-graph-lane-1: var(--vscode-scmGraph-foreground1, #ffb000);
-  --gitviz-graph-lane-2: var(--vscode-scmGraph-foreground2, #dc267f);
-  --gitviz-graph-lane-3: var(--vscode-scmGraph-foreground3, #994f00);
-  --gitviz-graph-lane-4: var(--vscode-scmGraph-foreground4, #40b0a6);
-  --gitviz-graph-lane-5: var(--vscode-scmGraph-foreground5, #b66dff);
-  --gitviz-graph-head: var(--vscode-textLink-foreground, #3794ff);
-  --gitviz-graph-row-bg: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.05));
-  --gitviz-graph-row-selected: var(--vscode-list-activeSelectionBackground, rgba(0, 120, 212, 0.5));
+  /* Graph lanes (desaturated to match VS Code Dark+ chartsXxx) */
+  --gitviz-graph-lane-1: var(--vscode-scmGraph-foreground1);
+  --gitviz-graph-lane-2: var(--vscode-scmGraph-foreground2);
+  --gitviz-graph-lane-3: var(--vscode-scmGraph-foreground3);
+  --gitviz-graph-lane-4: var(--vscode-scmGraph-foreground4);
+  --gitviz-graph-lane-5: var(--vscode-scmGraph-foreground5);
+  --gitviz-graph-head: var(--vscode-charts-purple);
+
+  /* Row backgrounds */
+  --gitviz-row-bg: transparent;
+  --gitviz-row-bg-hover: var(--vscode-list-hoverBackground);
+  --gitviz-row-bg-selected: var(--vscode-list-activeSelectionBackground);
+  --gitviz-row-bg-selected-inactive: var(--vscode-list-inactiveSelectionBackground);
+  --gitviz-row-focus-border: var(--vscode-focusBorder);
+
+  /* Backwards-compat aliases (older naming) */
+  --gitviz-graph-row-bg: var(--gitviz-row-bg-hover);
+  --gitviz-graph-row-selected: var(--gitviz-row-bg-selected);
+
+  /* Surfaces */
+  --gitviz-app-bg: var(--vscode-editor-background);
+  --gitviz-app-fg: var(--vscode-editor-foreground);
+  --gitviz-card-bg: var(--vscode-editorWidget-background);
+  --gitviz-card-fg: var(--vscode-editorWidget-foreground);
+  --gitviz-border: var(--vscode-widget-border);
+  --gitviz-panel-border: var(--vscode-panel-border);
+
+  /* Text */
+  --gitviz-text-muted: var(--vscode-descriptionForeground);
+  --gitviz-text-disabled: var(--vscode-disabledForeground);
+
+  /* Badges / pills */
+  --gitviz-badge-bg: var(--vscode-badge-background);
+  --gitviz-badge-fg: var(--vscode-badge-foreground);
+  --gitviz-badge-head-bg: color-mix(in srgb, var(--vscode-charts-purple) 22%, transparent);
+  --gitviz-badge-head-fg: var(--vscode-charts-purple);
+  --gitviz-badge-branch-bg: color-mix(in srgb, var(--vscode-charts-green) 18%, transparent);
+  --gitviz-badge-branch-fg: var(--vscode-charts-green);
+  --gitviz-badge-remote-bg: color-mix(in srgb, var(--vscode-charts-blue) 18%, transparent);
+  --gitviz-badge-remote-fg: var(--vscode-charts-blue);
+  --gitviz-badge-tag-bg: color-mix(in srgb, var(--vscode-charts-yellow) 18%, transparent);
+  --gitviz-badge-tag-fg: var(--vscode-charts-yellow);
+
+  /* Buttons */
+  --gitviz-button-bg: var(--vscode-button-background);
+  --gitviz-button-fg: var(--vscode-button-foreground);
+  --gitviz-button-hover-bg: var(--vscode-button-hoverBackground);
+
+  /* Diff/git decoration */
+  --gitviz-add-fg: var(--vscode-gitDecoration-addedResourceForeground);
+  --gitviz-del-fg: var(--vscode-gitDecoration-deletedResourceForeground);
+  --gitviz-mod-fg: var(--vscode-gitDecoration-modifiedResourceForeground);
+  --gitviz-rename-fg: var(--vscode-gitDecoration-renamedResourceForeground);
+  --gitviz-add-bg: color-mix(
+    in srgb,
+    var(--vscode-gitDecoration-addedResourceForeground) 12%,
+    transparent
+  );
+  --gitviz-del-bg: color-mix(
+    in srgb,
+    var(--vscode-gitDecoration-deletedResourceForeground) 12%,
+    transparent
+  );
+
+  /* Focus */
+  --gitviz-focus-border: var(--vscode-focusBorder);
+}
+
+/* Row hover and selection states — matches VS Code list patterns. */
+.gitviz-row {
+  background-color: var(--gitviz-row-bg);
+  border-left: 2px solid transparent;
+}
+.gitviz-row:hover {
+  background-color: var(--gitviz-row-bg-hover);
+}
+.gitviz-row[data-selected="true"] {
+  background-color: var(--gitviz-row-bg-selected);
+  border-left-color: var(--gitviz-row-focus-border);
+}
+.gitviz-row[data-selected="true"]:hover {
+  background-color: var(--gitviz-row-bg-selected);
 }
