@@ -4,7 +4,10 @@
   "main": "dist/types.js",
   "types": "dist/types.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc -b",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "test": "vitest run"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

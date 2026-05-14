@@ -44,12 +44,15 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run build --workspace=web && npm run compile",
+    "vscode:prepublish": "pnpm --filter web build && pnpm compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
-    "test": "vscode-test"
+    "build:all": "pnpm -r build",
+    "type-check": "pnpm -r type-check",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r test"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -61,15 +64,10 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3"
   },
-  "workspaces": [
-    "web",
-    "shared",
-    "backend"
-  ],
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.2.1",
-    "@git-viz/backend": "1.0.0",
-    "@git-viz/shared": "1.0.0"
+    "@git-viz/backend": "workspace:*",
+    "@git-viz/shared": "workspace:*"
   }
 }
