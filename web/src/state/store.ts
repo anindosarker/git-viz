@@ -54,6 +54,11 @@ interface ViewSlice {
 interface UISlice {
   preferencesOpen: boolean;
   setPreferencesOpen: (open: boolean) => void;
+  detailsHeight: number;
+  setDetailsHeight: (h: number) => void;
+  diffViewer?: { hash: string; path: string };
+  openDiffViewer: (hash: string, path: string) => void;
+  closeDiffViewer: () => void;
 }
 
 export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice;
@@ -123,6 +128,11 @@ export const useStore = create<Store>()((set) => ({
 
   preferencesOpen: false,
   setPreferencesOpen: (preferencesOpen) => set({ preferencesOpen }),
+  detailsHeight: initial.detailsHeight ?? 320,
+  setDetailsHeight: (detailsHeight) => set({ detailsHeight }),
+  diffViewer: undefined,
+  openDiffViewer: (hash, path) => set({ diffViewer: { hash, path } }),
+  closeDiffViewer: () => set({ diffViewer: undefined }),
 }));
 
 const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
@@ -132,6 +142,7 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "refDisplay",
   "rowHeight",
   "columns",
+  "detailsHeight",
 ];
 
 const flush = debounce((state: Store) => {

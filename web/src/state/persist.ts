@@ -16,6 +16,7 @@ export interface PersistedState {
   refDisplay?: string;
   rowHeight?: number;
   columns?: string[];
+  detailsHeight?: number;
 }
 
 export interface PersistAdapter {
