@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import path from "path";
 
+import { actionsRoutes } from "./routes/actions";
 import { bootstrapRoutes } from "./routes/bootstrap";
 import { commitsRoutes } from "./routes/commits";
 import { refsRoutes } from "./routes/refs";
@@ -45,6 +46,7 @@ export function start(argv: string[] = process.argv.slice(2)): void {
   app.use("/api", commitsRoutes(repo));
   app.use("/api", refsRoutes(repo));
   app.use("/api", remotesRoutes(repo));
+  app.use("/api", actionsRoutes(repo));
 
   const webDist = path.resolve(__dirname, "../../web/dist");
   app.use(express.static(webDist));
