@@ -5,6 +5,8 @@ node_modules
 *.vsix
 *.tsbuildinfo
 *.js.map
+**/src/**/*.js
+**/src/**/*.js.map
 .DS_Store
 
 # AI workspace reference repos
