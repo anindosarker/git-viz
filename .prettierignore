@@ -1,0 +1,10 @@
+node_modules
+dist
+out
+web/dist
+backend/dist
+shared/dist
+.ai/reference
+*.lock
+pnpm-lock.yaml
+package-lock.json
