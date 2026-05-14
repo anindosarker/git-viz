@@ -1,23 +1,35 @@
+import path from "path";
+import type { GitRepoInfo, GitHeadState } from "@git-viz/shared";
 import { GitExecutor } from "./GitExecutor";
 
 export class GitRepoService {
   /**
-   * Gets repository information (name and current branch).
+   * Returns repository info: name, root, HEAD state, and dirty bit.
    */
-  public static async getRepoInfo(
-    cwd: string
-  ): Promise<{ repo: string; branch: string }> {
+  public static async getRepoInfo(cwd: string): Promise<GitRepoInfo> {
     try {
-      const repoRoot = await GitExecutor.exec(cwd, [
+      const root = await GitExecutor.exec(cwd, [
         "rev-parse",
         "--show-toplevel",
       ]);
-      const branch = await GitExecutor.exec(cwd, ["branch", "--show-current"]);
-      const repoName = repoRoot.split("/").pop() || "";
-      return { repo: repoName, branch };
+      const name = path.basename(root);
+      const head = await GitRepoService.getHeadState(root);
+      const status = await GitExecutor.exec(root, [
+        "status",
+        "--porcelain",
+        "--no-renames",
+        "-uno",
+      ]);
+      const hasUncommittedChanges = status.length > 0;
+      return { name, root, head, hasUncommittedChanges };
     } catch (error) {
       console.error("Failed to fetch repo info:", error);
-      return { repo: "", branch: "" };
+      return {
+        name: "",
+        root: "",
+        head: { detached: false, hash: "", shortHash: "" },
+        hasUncommittedChanges: false,
+      };
     }
   }
 
@@ -33,6 +45,22 @@ export class GitRepoService {
       return root;
     } catch {
       return null;
+    }
+  }
+
+  private static async getHeadState(cwd: string): Promise<GitHeadState> {
+    const hash = await GitExecutor.exec(cwd, ["rev-parse", "HEAD"]);
+    const shortHash = hash.slice(0, 7);
+    try {
+      const symbolic = await GitExecutor.exec(cwd, [
+        "symbolic-ref",
+        "--quiet",
+        "HEAD",
+      ]);
+      const branch = symbolic.replace(/^refs\/heads\//, "");
+      return { detached: false, branch, hash, shortHash };
+    } catch {
+      return { detached: true, hash, shortHash };
     }
   }
 }
