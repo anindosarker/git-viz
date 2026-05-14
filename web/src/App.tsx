@@ -2,6 +2,7 @@ import { ActionsRoot } from "@/components/Actions";
 import { CommitDetails } from "@/components/CommitDetails/CommitDetails";
 import { DiffViewer } from "@/components/DiffViewer/DiffViewer";
 import { CommitTable } from "@/components/Graph/CommitTable";
+import { ActivityTimeline } from "@/components/Timeline/ActivityTimeline";
 import { PreferencesPanel } from "@/components/PreferencesPanel/PreferencesPanel";
 import { FilterChips } from "@/components/Search/FilterChips";
 import { FilterMenu } from "@/components/Search/FilterMenu";
@@ -20,6 +21,7 @@ import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useThemeSync } from "@/hooks/useThemeSync";
 import { gitService } from "@/services/git.service";
 import { useStore } from "@/state/store";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 
@@ -92,6 +94,27 @@ function GitGraphApp() {
   });
 
   const { rows } = useGraph({ workingTreeDirty: repoInfo?.hasUncommittedChanges });
+  const query = useStore((s) => s.query);
+  const commits = useStore((s) => s.commits);
+  const selectedHash = useStore((s) => s.selectedHash);
+  const select = useStore((s) => s.select);
+  const lastFetchAt = useStore((s) => s.lastFetchAt);
+  const matchCount = query.trim() ? commits.length : undefined;
+
+  const handleJumpToMatch = useCallback(
+    (direction: "prev" | "next") => {
+      if (commits.length === 0) return;
+      const currentIdx = selectedHash ? commits.findIndex((c) => c.hash === selectedHash) : -1;
+      let nextIdx: number;
+      if (direction === "next") {
+        nextIdx = currentIdx < 0 ? 0 : Math.min(commits.length - 1, currentIdx + 1);
+      } else {
+        nextIdx = currentIdx <= 0 ? 0 : currentIdx - 1;
+      }
+      select(commits[nextIdx]?.hash);
+    },
+    [commits, selectedHash, select]
+  );
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
@@ -102,10 +125,14 @@ function GitGraphApp() {
           onRefresh={() => void refresh()}
           onSwitchRepo={handleSwitchRepo}
           loading={loading}
+          lastFetchAt={lastFetchAt}
+          matchCount={matchCount}
+          onJumpToMatch={handleJumpToMatch}
         />
       )}
 
       <FilterChips />
+      <ActivityTimeline />
 
       {error && (
         <div className="bg-destructive/15 text-destructive p-4 m-4 rounded-md">Error: {error}</div>
@@ -132,7 +159,9 @@ function GitGraphApp() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <GitGraphApp />
+      <TooltipProvider delayDuration={300}>
+        <GitGraphApp />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
