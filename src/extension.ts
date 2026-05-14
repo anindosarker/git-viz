@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import path from "path";
 import { MainPanel, type OpenGraphArgs } from "./panels/MainPanel";
 import { ConfigBridge } from "./settings/ConfigBridge";
 import { StatusBarItem } from "./statusBar/StatusBarItem";
@@ -43,11 +44,34 @@ export function activate(context: vscode.ExtensionContext) {
     if (MainPanel.currentPanel) MainPanel.currentPanel.postRefresh();
   });
 
+  const openSubmoduleCommand = vscode.commands.registerCommand(
+    "git-viz.openSubmodule",
+    (arg?: { repoCwd: string; submodulePath: string }) => {
+      if (!arg) return;
+      const absolute = path.isAbsolute(arg.submodulePath)
+        ? arg.submodulePath
+        : path.join(arg.repoCwd, arg.submodulePath);
+      treeProvider.addRepo(absolute, path.basename(absolute));
+      MainPanel.render(context.extensionUri, configBridge);
+    }
+  );
+
+  const openWorktreeCommand = vscode.commands.registerCommand(
+    "git-viz.openWorktree",
+    (arg?: { path: string }) => {
+      if (!arg) return;
+      treeProvider.addRepo(arg.path, path.basename(arg.path));
+      MainPanel.render(context.extensionUri, configBridge);
+    }
+  );
+
   context.subscriptions.push(
     showGraphCommand,
     switchBranchCommand,
     openSettingsCommand,
-    refreshCommand
+    refreshCommand,
+    openSubmoduleCommand,
+    openWorktreeCommand
   );
 
   context.subscriptions.push(
