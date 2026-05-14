@@ -1,7 +1,11 @@
 import { CommitGraph } from "@/components/Graph/CommitGraph";
 import { columnRegistry, getColumn, getRenderer } from "@/graph";
 import "@/graph/columns/author.column";
+import "@/graph/columns/authorAvatar.column";
+import "@/graph/columns/changes.column";
+import "@/graph/columns/date.column";
 import "@/graph/columns/graph.column";
+import "@/graph/columns/hash.column";
 import "@/graph/columns/refs.column";
 import "@/graph/columns/subject.column";
 import "@/graph/render/hybrid-canvas-wide";
