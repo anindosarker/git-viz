@@ -17,8 +17,11 @@ function refLabel(ref: GitRefPointer): string {
 const Component: React.FC<ColumnRendererProps> = ({ row, context }) => {
   const refsInline = context?.refsInline === true;
   const refs = row.commit.refs ?? [];
+  const isMerge = row.commit.parents.length >= 2;
   return (
-    <div className="flex items-center gap-2 overflow-hidden">
+    <div
+      className={`flex items-center gap-2 overflow-hidden ${isMerge ? "gitviz-merge-commit" : ""}`}
+    >
       {refsInline &&
         refs.map((ref, i) => (
           <RefBadge key={`${ref.type}:${ref.name}:${i}`} refName={refLabel(ref)} />

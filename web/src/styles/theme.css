@@ -90,3 +90,9 @@
 .gitviz-row[data-selected="true"]:hover {
   background-color: var(--gitviz-row-bg-selected);
 }
+
+/* Merge commits are de-emphasized (GitLens parity) */
+.gitviz-merge-commit {
+  opacity: 0.65;
+  color: var(--vscode-descriptionForeground);
+}
