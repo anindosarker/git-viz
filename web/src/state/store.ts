@@ -1,6 +1,11 @@
-import type { CommitsGetPageResponse, GitCommitSummary, GitRefsSnapshot } from "@git-viz/shared";
+import type {
+  CommitsGetPageResponse,
+  GitCommitSummary,
+  GitRefsSnapshot,
+  RepoSummary,
+} from "@git-viz/shared";
 import { create } from "zustand";
-import { debounce, getPersistAdapter, type PersistedState } from "./persist";
+import { debounce, getPersistAdapter, type PersistedState, type PersistedRoot } from "./persist";
 
 export type RefDisplay = "inline" | "left-column" | "right-column";
 export type DateFormat = "relative" | "absolute" | "iso";
@@ -56,14 +61,37 @@ interface UISlice {
   setPreferencesOpen: (open: boolean) => void;
 }
 
-export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice;
+interface RepoSlice {
+  activeRepoId?: string;
+  repos: RepoSummary[];
+  setActiveRepo: (id: string) => void;
+  setRepos: (repos: RepoSummary[]) => void;
+}
+
+export type Store = CommitsSlice & RefsSlice & SelectionSlice & ViewSlice & UISlice & RepoSlice;
 
 const DEFAULT_COLUMNS = ["graph", "subject", "refs", "author", "date", "hash"];
 
 const adapter = getPersistAdapter();
-const initial = adapter.get();
+const persistedRoot: PersistedRoot = adapter.get();
+const initialActiveRepoId = persistedRoot.activeRepoId;
+const initial: PersistedState =
+  (initialActiveRepoId !== undefined
+    ? persistedRoot.perRepo?.[initialActiveRepoId]
+    : persistedRoot.perRepo?.[""]) ?? {};
 
-export const useStore = create<Store>()((set) => ({
+function applyRepoSliceToState(slice: PersistedState): Partial<Store> {
+  return {
+    selectedHash: slice.selectedHash,
+    scrollY: slice.scrollY ?? 0,
+    presetId: slice.presetId ?? "git-graph-like",
+    refDisplay: (slice.refDisplay as RefDisplay) ?? "left-column",
+    rowHeight: slice.rowHeight ?? 36,
+    columns: slice.columns ?? DEFAULT_COLUMNS,
+  };
+}
+
+export const useStore = create<Store>()((set, get) => ({
   commits: [],
   hasMore: false,
   nextCursor: undefined,
@@ -123,6 +151,34 @@ export const useStore = create<Store>()((set) => ({
 
   preferencesOpen: false,
   setPreferencesOpen: (preferencesOpen) => set({ preferencesOpen }),
+
+  activeRepoId: initialActiveRepoId,
+  repos: [],
+  setActiveRepo: (id) => {
+    const current = get().activeRepoId;
+    if (current === id) {
+      set({ activeRepoId: id });
+      return;
+    }
+    // Persist the outgoing repo's slice before switching, then hydrate the
+    // incoming repo's slice.
+    flushImmediate(get());
+    const root = adapter.get();
+    const incoming = root.perRepo?.[id] ?? {};
+    set({
+      activeRepoId: id,
+      ...applyRepoSliceToState(incoming),
+      // Reset transient slices — they'll be repopulated by the bootstrap call.
+      commits: [],
+      hasMore: false,
+      nextCursor: undefined,
+      loading: false,
+      refs: undefined,
+      loadingRefs: false,
+      hoveredHash: undefined,
+    });
+  },
+  setRepos: (repos) => set({ repos }),
 }));
 
 const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
@@ -134,14 +190,32 @@ const PERSIST_KEYS: ReadonlyArray<keyof Store> = [
   "columns",
 ];
 
-const flush = debounce((state: Store) => {
+function snapshotRepoSlice(state: Store): PersistedState {
   const slice: PersistedState = {};
   for (const k of PERSIST_KEYS) {
     const value = state[k];
     if (value !== undefined) (slice as Record<string, unknown>)[k] = value;
   }
-  adapter.set(slice);
-}, 100);
+  return slice;
+}
+
+function writeRoot(state: Store): void {
+  const root = adapter.get();
+  const repoId = state.activeRepoId ?? "";
+  const perRepo = { ...(root.perRepo ?? {}) };
+  perRepo[repoId] = snapshotRepoSlice(state);
+  const next: PersistedRoot = {
+    activeRepoId: state.activeRepoId,
+    perRepo,
+  };
+  adapter.set(next);
+}
+
+function flushImmediate(state: Store): void {
+  writeRoot(state);
+}
+
+const flush = debounce((state: Store) => writeRoot(state), 100);
 
 useStore.subscribe((state, prev) => {
   let changed = false;
@@ -151,5 +225,6 @@ useStore.subscribe((state, prev) => {
       break;
     }
   }
+  if (state.activeRepoId !== prev.activeRepoId) changed = true;
   if (changed) flush(state);
 });
