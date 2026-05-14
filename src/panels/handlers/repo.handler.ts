@@ -21,7 +21,9 @@ const bootstrap: CommandHandler = {
   async handle(payload, cwd, webview, requestId) {
     try {
       const limit = typeof payload?.limit === "number" && payload.limit > 0 ? payload.limit : 500;
-      const data = await GitBootstrapService.get(cwd, limit);
+      const order: "topo" | "date" =
+        payload?.order === "topo" || payload?.order === "date" ? payload.order : "date";
+      const data = await GitBootstrapService.get(cwd, limit, order);
       postResponse(webview, this.command, requestId, { data });
     } catch (err: any) {
       postResponse(webview, this.command, requestId, {

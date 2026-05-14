@@ -26,8 +26,11 @@ export class GitService {
     this.transport = transport;
   }
 
-  bootstrap(limit?: number): Promise<BootstrapResponse> {
-    return this.transport.request("bootstrap", limit !== undefined ? { limit } : undefined);
+  bootstrap(opts?: { limit?: number; order?: "topo" | "date" }): Promise<BootstrapResponse> {
+    if (!opts || (opts.limit === undefined && opts.order === undefined)) {
+      return this.transport.request("bootstrap");
+    }
+    return this.transport.request("bootstrap", opts);
   }
 
   getRepoInfo(): Promise<GitRepoInfo> {

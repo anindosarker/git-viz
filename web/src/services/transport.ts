@@ -98,8 +98,11 @@ export class StandaloneTransport implements Transport {
     const p = (payload ?? {}) as Record<string, unknown>;
     switch (command) {
       case "bootstrap": {
-        const limit = typeof p.limit === "number" ? `?limit=${p.limit}` : "";
-        return { method: "GET", path: `/api/bootstrap${limit}` };
+        const params: string[] = [];
+        if (typeof p.limit === "number") params.push(`limit=${p.limit}`);
+        if (p.order === "topo" || p.order === "date") params.push(`order=${p.order}`);
+        const query = params.length ? `?${params.join("&")}` : "";
+        return { method: "GET", path: `/api/bootstrap${query}` };
       }
       case "repo:getInfo":
         return { method: "GET", path: "/api/repo-info" };

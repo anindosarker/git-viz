@@ -4,9 +4,6 @@ import type { ViewPreset } from "./types";
 export const gitlensLikePreset: ViewPreset = {
   id: "gitlens-like",
   label: "GitLens",
-  // gitlens-topo is delivered by Plan 4. Until then, fall back to rolling at
-  // resolution time (see useGraph: getAlgorithm returns undefined for
-  // unregistered ids, callers fall back to rollingAlgorithm).
   algorithmId: "gitlens-topo",
   rendererId: "hybrid-canvas-compact",
   defaultRefDisplay: "left-column",
