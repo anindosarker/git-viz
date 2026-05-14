@@ -2,3 +2,4 @@ packages:
   - "web"
   - "shared"
   - "backend"
+  - "server"
