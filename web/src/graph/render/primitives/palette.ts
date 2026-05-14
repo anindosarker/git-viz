@@ -1,4 +1,4 @@
-const FALLBACKS = ["#0098fa", "#9a00fa", "#00fa9a", "#fa9a00", "#fa0098"];
+const FALLBACKS = ["#c5963f", "#b85586", "#994f00", "#40b0a6", "#9b6bd0"];
 
 const CSS_VAR_RE = /var\(\s*(--[^,)\s]+)(?:\s*,\s*([^)]+))?\)/;
 

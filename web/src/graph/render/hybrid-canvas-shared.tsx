@@ -96,7 +96,7 @@ function planRow(row: GraphRow): DrawingPlan {
         outputSwimlanes[firstParentCol]?.color ??
         plan.topToCircle?.color ??
         inputSwimlanes[0]?.color ??
-        "#888",
+        "var(--vscode-descriptionForeground)",
     };
   }
 
@@ -107,7 +107,7 @@ function circleColorFor(row: GraphRow): string {
   const { inputSwimlanes, outputSwimlanes, nodeColumn, commit } = row;
   if (nodeColumn < outputSwimlanes.length) return outputSwimlanes[nodeColumn].color;
   if (nodeColumn < inputSwimlanes.length) return inputSwimlanes[nodeColumn].color;
-  return commit.color ?? "#888";
+  return commit.color ?? "var(--vscode-descriptionForeground)";
 }
 
 function laneCountForRow(row: GraphRow): number {

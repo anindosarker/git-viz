@@ -9,6 +9,6 @@ export function getHeadBranchColor(): string {
 }
 
 export function paletteColor(index: number, palette = getPalette()): string {
-  if (palette.length === 0) return "#888";
+  if (palette.length === 0) return "var(--vscode-descriptionForeground)";
   return palette[index % palette.length];
 }

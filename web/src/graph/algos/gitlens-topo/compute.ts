@@ -4,8 +4,10 @@ import type { ComputeInput, ComputeResult } from "../types";
 import { cloneState, initialState, isGitLensTopoState, type GitLensTopoState } from "./state";
 import { stepCommit } from "./stepCommit";
 
+const HEAD_COLOR_FALLBACK = "var(--gitviz-graph-head, var(--vscode-charts-purple))";
+
 function makeWorkingTreeRow(head: GitHeadState, state: GitLensTopoState): GraphRow {
-  const headColor = state.colorMap.get(state.headBranchName ?? "") ?? "#3794ff";
+  const headColor = state.colorMap.get(state.headBranchName ?? "") ?? HEAD_COLOR_FALLBACK;
   const commit: CommitRow = {
     hash: `working-tree:${head.hash}`,
     parents: [head.hash],
