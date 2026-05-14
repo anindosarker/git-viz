@@ -12,10 +12,12 @@ export interface NodeDrawOptions {
   isHead?: boolean;
   initials?: string;
   fontPx?: number;
+  /** Optional loaded avatar image, drawn clipped inside the circle. */
+  avatar?: HTMLImageElement;
 }
 
 export function drawNodeCircle(opts: NodeDrawOptions): void {
-  const { ctx, cx, cy, r, color, dashed, isHead, initials, fontPx } = opts;
+  const { ctx, cx, cy, r, color, dashed, isHead, initials, fontPx, avatar } = opts;
   const fgOnNode = resolveColor("var(--vscode-editor-foreground)");
   ctx.save();
   if (dashed) {
@@ -37,7 +39,15 @@ export function drawNodeCircle(opts: NodeDrawOptions): void {
       ctx.arc(cx, cy, r + 1.5, 0, Math.PI * 2);
       ctx.stroke();
     }
-    if (initials) {
+    if (avatar && avatar.complete && avatar.naturalWidth > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+      ctx.clip();
+      const d = (r - 0.5) * 2;
+      ctx.drawImage(avatar, cx - r + 0.5, cy - r + 0.5, d, d);
+      ctx.restore();
+    } else if (initials) {
       ctx.fillStyle = fgOnNode;
       ctx.font = `600 ${fontPx ?? Math.max(8, Math.floor(r * 0.9))}px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = "center";

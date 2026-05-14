@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import type { GraphRow } from "../types";
+import { getAvatarImage, subscribeAvatarLoads } from "../avatars";
 import { drawNodeCircle, getInitials } from "./primitives/node";
 import {
   nodeCenterX,
@@ -18,6 +19,8 @@ export interface HybridCanvasConfig {
   nodeRadius: number;
   /** Whether to render author initials inside the node */
   showInitials: boolean;
+  /** Whether to render the author's avatar (gravatar) inside the node */
+  showAvatars?: boolean;
   strokeWidth: number;
 }
 
@@ -141,6 +144,13 @@ export const HybridCanvas: React.FC<HybridCanvasInternalProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const [, forceDraw] = React.useReducer((x: number) => x + 1, 0);
+
+  // Re-paint when any avatar finishes loading.
+  useEffect(() => {
+    if (!config.showAvatars) return;
+    return subscribeAvatarLoads(() => forceDraw());
+  }, [config.showAvatars]);
 
   const maxLanes = React.useMemo(() => {
     let m = 0;
@@ -225,6 +235,11 @@ export const HybridCanvas: React.FC<HybridCanvasInternalProps> = ({
 
         const cx = nodeCenterX(laneWidth, row.nodeColumn);
         const cy = rowTop + rowHeight / 2;
+        let avatarImg: HTMLImageElement | undefined;
+        if (config.showAvatars && row.kind === "node" && row.commit.authorEmail) {
+          const entry = getAvatarImage(row.commit.authorEmail, row.commit.authorAvatar);
+          if (entry.loaded && !entry.failed) avatarImg = entry.img;
+        }
         drawNodeCircle({
           ctx,
           cx,
@@ -233,7 +248,8 @@ export const HybridCanvas: React.FC<HybridCanvasInternalProps> = ({
           color: resolve(circleColorFor(row), row.nodeColumn),
           dashed: row.kind === "working-tree",
           isHead: row.kind === "HEAD",
-          initials: config.showInitials ? getInitials(row.commit.author) : undefined,
+          initials: config.showInitials && !avatarImg ? getInitials(row.commit.author) : undefined,
+          avatar: avatarImg,
         });
       }
     };

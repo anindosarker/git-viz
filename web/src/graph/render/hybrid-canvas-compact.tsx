@@ -9,6 +9,7 @@ export const hybridCanvasCompact = makeHybridCanvasRenderer(
     defaultLaneWidth: 16,
     nodeRadius: 7,
     showInitials: true,
+    showAvatars: true,
     strokeWidth: 1.5,
   }
 );
