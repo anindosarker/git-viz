@@ -2,6 +2,7 @@ import { CommitGraph } from "@/components/Graph/CommitGraph";
 import { columnRegistry, getColumn, getRenderer } from "@/graph";
 import "@/graph/columns/author.column";
 import "@/graph/columns/graph.column";
+import "@/graph/columns/refs.column";
 import "@/graph/columns/subject.column";
 import "@/graph/render/hybrid-canvas-wide";
 import type { GraphRow } from "@/graph";
@@ -50,8 +51,10 @@ export const CommitTable: React.FC<CommitTableProps> = ({
         return c.visible;
       })
       .map((c) => {
-        const def = getColumn(c.id) ?? columnRegistry.get(c.id);
-        return { config: c, def };
+        const config: ColumnConfig =
+          c.id === "subject" ? { ...c, refsInline: refDisplay === "inline" } : c;
+        const def = getColumn(config.id) ?? columnRegistry.get(config.id);
+        return { config, def };
       })
       .filter(
         (x): x is { config: ColumnConfig; def: NonNullable<ReturnType<typeof getColumn>> } =>
