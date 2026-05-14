@@ -1,0 +1,15 @@
+/*
+ * Theme tokens shared by the React DOM and the canvas graph renderer.
+ * Each token maps to a VS Code SCM Graph token when available; otherwise
+ * the fallback hex is used (standalone mode or hosts without the token).
+ */
+:root {
+  --gitviz-graph-lane-1: var(--vscode-scmGraph-foreground1, #ffb000);
+  --gitviz-graph-lane-2: var(--vscode-scmGraph-foreground2, #dc267f);
+  --gitviz-graph-lane-3: var(--vscode-scmGraph-foreground3, #994f00);
+  --gitviz-graph-lane-4: var(--vscode-scmGraph-foreground4, #40b0a6);
+  --gitviz-graph-lane-5: var(--vscode-scmGraph-foreground5, #b66dff);
+  --gitviz-graph-head: var(--vscode-textLink-foreground, #3794ff);
+  --gitviz-graph-row-bg: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.05));
+  --gitviz-graph-row-selected: var(--vscode-list-activeSelectionBackground, rgba(0, 120, 212, 0.5));
+}
