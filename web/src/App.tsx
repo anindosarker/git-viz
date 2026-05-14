@@ -1,11 +1,13 @@
 import type { CommitRow, GitRefPointer } from "@/types/git";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { ActionsRoot } from "./components/Actions";
 import { CommitList } from "./components/CommitList/CommitList";
 import { PreferencesPanel } from "./components/PreferencesPanel/PreferencesPanel";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit";
 import { useConfigBridge } from "./hooks/useConfigBridge";
+import { useGitInvalidation } from "./hooks/useGitInvalidation";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useThemeSync } from "./hooks/useThemeSync";
 import { gitService } from "./services/git.service";
@@ -22,6 +24,7 @@ function GitGraphApp() {
   useConfigBridge();
   useThemeSync();
   useKeyboardNav();
+  useGitInvalidation(refresh);
 
   const { data: repoInfo } = useQuery({
     queryKey: ["repoInfo"],
@@ -31,6 +34,7 @@ function GitGraphApp() {
 
   const rows: CommitRow[] = useMemo(() => {
     const byHash = new Map<string, GitRefPointer[]>();
+    const stashHashes = new Set<string>();
     const push = (ref: GitRefPointer) => {
       const list = byHash.get(ref.commitHash) ?? [];
       list.push(ref);
@@ -48,6 +52,10 @@ function GitGraphApp() {
       for (const t of refs.tags) {
         push({ type: "tag", name: t.name, commitHash: t.target });
       }
+      for (const s of refs.stashes) {
+        push({ type: "stash", name: s.name, commitHash: s.hash });
+        stashHashes.add(s.hash);
+      }
       if (refs.head && !refs.head.detached) {
         push({
           type: "head",
@@ -57,7 +65,11 @@ function GitGraphApp() {
         });
       }
     }
-    return commits.map((c) => ({ ...c, refs: byHash.get(c.hash) ?? [] }));
+    return commits.map((c) => ({
+      ...c,
+      refs: byHash.get(c.hash) ?? [],
+      kind: stashHashes.has(c.hash) ? ("stash" as const) : undefined,
+    }));
   }, [commits, refs]);
 
   return (
@@ -84,6 +96,7 @@ function GitGraphApp() {
       </div>
 
       <PreferencesPanel />
+      <ActionsRoot />
     </div>
   );
 }
