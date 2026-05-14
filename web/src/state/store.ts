@@ -1,8 +1,4 @@
-import type {
-  CommitsGetPageResponse,
-  GitCommitSummary,
-  GitRefsSnapshot,
-} from "@git-viz/shared";
+import type { CommitsGetPageResponse, GitCommitSummary, GitRefsSnapshot } from "@git-viz/shared";
 import { create } from "zustand";
 
 interface CommitsSlice {
@@ -46,13 +42,11 @@ export const useStore = create<Store>()((set) => ({
   setCommitsLoading: (loading) => set({ loading }),
   appendPage: (page) =>
     set((state) => ({
-      commits:
-        state.commits.length === 0 ? page.commits : [...state.commits, ...page.commits],
+      commits: state.commits.length === 0 ? page.commits : [...state.commits, ...page.commits],
       hasMore: page.hasMore,
       nextCursor: page.nextCursor,
     })),
-  resetCommits: () =>
-    set({ commits: [], hasMore: false, nextCursor: undefined, loading: false }),
+  resetCommits: () => set({ commits: [], hasMore: false, nextCursor: undefined, loading: false }),
 
   refs: undefined,
   loadingRefs: false,
