@@ -1,3 +1,4 @@
+import { ActionsRoot } from "@/components/Actions";
 import { CommitDetails } from "@/components/CommitDetails/CommitDetails";
 import { DiffViewer } from "@/components/DiffViewer/DiffViewer";
 import { CommitTable } from "@/components/Graph/CommitTable";
@@ -12,6 +13,7 @@ import "@/graph/columns/subject.column";
 import "@/graph/render/hybrid-canvas-wide";
 import useGit from "@/hooks/useGit";
 import { useConfigBridge } from "@/hooks/useConfigBridge";
+import { useGitInvalidation } from "@/hooks/useGitInvalidation";
 import { useGraph } from "@/hooks/useGraph";
 import { useKeyboardNav } from "@/hooks/useKeyboardNav";
 import { useThemeSync } from "@/hooks/useThemeSync";
@@ -26,6 +28,7 @@ function GitGraphApp() {
   useConfigBridge();
   useThemeSync();
   useKeyboardNav();
+  useGitInvalidation(refresh);
 
   const { data: repoInfo } = useQuery({
     queryKey: ["repoInfo"],
@@ -65,6 +68,7 @@ function GitGraphApp() {
       <PreferencesPanel />
       <DiffViewer />
       <FilterMenu />
+      <ActionsRoot />
     </div>
   );
 }

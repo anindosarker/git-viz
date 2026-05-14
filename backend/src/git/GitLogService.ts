@@ -48,6 +48,9 @@ export class GitLogService {
         args.push(`${cursor}~1`);
       } else if (!filter?.refs || filter.refs.length === 0) {
         args.push("--all");
+        // Include stash refs in traversal so stash entries appear in the graph
+        // as dashed side-branches (rendered with `kind: 'stash'` rows).
+        args.push("--stash");
       }
     } else {
       // Filter-supplied refs anchor traversal. Combine with cursor by limiting

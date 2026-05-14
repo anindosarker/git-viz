@@ -11,7 +11,8 @@
     "./GitStashService": "./dist/git/GitStashService.js",
     "./GitRemoteService": "./dist/git/GitRemoteService.js",
     "./GitRefService": "./dist/git/GitRefService.js",
-    "./GitBootstrapService": "./dist/git/GitBootstrapService.js"
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.js",
+    "./GitActionService": "./dist/git/GitActionService.js"
   },
   "typesIndices": {
     "./GitExecutor": "./dist/git/GitExecutor.d.ts",
@@ -22,7 +23,8 @@
     "./GitStashService": "./dist/git/GitStashService.d.ts",
     "./GitRemoteService": "./dist/git/GitRemoteService.d.ts",
     "./GitRefService": "./dist/git/GitRefService.d.ts",
-    "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts"
+    "./GitBootstrapService": "./dist/git/GitBootstrapService.d.ts",
+    "./GitActionService": "./dist/git/GitActionService.d.ts"
   },
   "scripts": {
     "build": "tsc -b",

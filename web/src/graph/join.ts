@@ -33,6 +33,9 @@ function indexRefsByHash(refs?: GitRefsSnapshot): Map<string, GitRefPointer[]> {
   for (const t of refs.tags) {
     push({ type: "tag", name: t.name, commitHash: t.target });
   }
+  for (const s of refs.stashes) {
+    push({ type: "stash", name: s.name, commitHash: s.hash });
+  }
   if (refs.head && !refs.head.detached) {
     push({
       type: "head",
@@ -51,7 +54,7 @@ function indexRefsByHash(refs?: GitRefsSnapshot): Map<string, GitRefPointer[]> {
  */
 export interface JoinedRow {
   commit: CommitRow;
-  kind: "HEAD" | "node" | "working-tree";
+  kind: "HEAD" | "node" | "working-tree" | "stash";
 }
 
 export const WORKING_TREE_HASH = "__working-tree__";
@@ -81,9 +84,11 @@ export function joinCommits(opts: JoinOptions): JoinedRow[] {
     });
   }
 
+  const stashHashes = new Set<string>(refs?.stashes.map((s) => s.hash) ?? []);
   for (const c of commits) {
+    const isStash = stashHashes.has(c.hash);
     out.push({
-      kind: c.hash === headHash ? "HEAD" : "node",
+      kind: isStash ? "stash" : c.hash === headHash ? "HEAD" : "node",
       commit: { ...c, refs: byHash.get(c.hash) ?? [] },
     });
   }

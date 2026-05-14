@@ -4,8 +4,22 @@ import { presetRegistry } from "@/graph";
 import "@/graph/presets/git-graph-like";
 import "@/graph/presets/gitlens-like";
 import "@/graph/presets/vscode-scm-graph-like";
+import { gitActions } from "@/services/git-actions.service";
+import { useActionsStore } from "@/state/actionsStore";
 import { selectActiveFilters, useStore } from "@/state/store";
-import { Filter, FolderGit2, GitBranch, ListFilter, RotateCw, Settings } from "lucide-react";
+import {
+  Download,
+  Filter,
+  FolderGit2,
+  GitBranch,
+  ListFilter,
+  MoreHorizontal,
+  RotateCw,
+  Settings,
+  Upload,
+} from "lucide-react";
+import React from "react";
+import { runAction } from "../Actions/runAction";
 
 interface TopBarProps {
   repo: string;
@@ -23,6 +37,21 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
   const refPanelOpen = useStore((s) => s.refPanelOpen);
   const setRefPanelOpen = useStore((s) => s.setRefPanelOpen);
   const hasActiveFilters = useStore((s) => selectActiveFilters(s).hasActiveFilters);
+  const openModal = useActionsStore((s) => s.openModal);
+  const openConfirm = useActionsStore((s) => s.openConfirm);
+  const [moreOpen, setMoreOpen] = React.useState(false);
+
+  const fetchAll = () => runAction("Fetch all remotes", () => gitActions.remoteFetch({}));
+  const pull = () =>
+    openConfirm({
+      title: "Pull",
+      description: `Pull from upstream into ${branch}? Uses fast-forward strategy.`,
+      confirmLabel: "Pull",
+      onConfirm: async () => {
+        await runAction(`Pull ${branch}`, () => gitActions.remotePull({ strategy: "ff" }));
+      },
+    });
+  const push = () => openModal({ kind: "push", context: { branch } });
 
   return (
     <div className="flex items-center justify-between bg-muted/40 p-2 border-b text-sm gap-2">
@@ -37,6 +66,7 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
           <span className="truncate">{branch}</span>
         </div>
       </div>
+
       <div className="flex items-center gap-1">
         <SearchBar />
         <Button
@@ -71,6 +101,95 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
             ))}
           </select>
         </label>
+        <Button variant="ghost" size="sm" onClick={fetchAll} title="Fetch all remotes">
+          <Download className="h-4 w-4" />
+          Fetch
+        </Button>
+        <Button variant="ghost" size="sm" onClick={pull} title="Pull">
+          <Download className="h-4 w-4 rotate-90" />
+          Pull
+        </Button>
+        <Button variant="ghost" size="sm" onClick={push} title="Push">
+          <Upload className="h-4 w-4" />
+          Push
+        </Button>
+
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMoreOpen((v) => !v)}
+            title="More actions"
+            aria-label="More actions"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+          {moreOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} aria-hidden />
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] rounded-md border bg-background p-1 shadow-md">
+                <MoreItem
+                  label="Stash changes…"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openModal({ kind: "stash-create" });
+                  }}
+                />
+                <MoreItem
+                  label="Create branch…"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openModal({ kind: "branch-create" });
+                  }}
+                />
+                <MoreItem
+                  label="Create tag…"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openModal({ kind: "tag-create" });
+                  }}
+                />
+                <MoreItem
+                  label="Merge…"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openModal({ kind: "merge" });
+                  }}
+                />
+                <MoreItem
+                  label="Rebase…"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    openModal({ kind: "rebase" });
+                  }}
+                />
+                <div className="my-1 h-px bg-border" />
+                <MoreItem
+                  label="Abort merge"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    void runAction("Abort merge", () => gitActions.mergeAbort());
+                  }}
+                />
+                <MoreItem
+                  label="Abort rebase"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    void runAction("Abort rebase", () => gitActions.rebaseAbort());
+                  }}
+                />
+                <MoreItem
+                  label="Continue rebase"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    void runAction("Continue rebase", () => gitActions.rebaseContinue());
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
         <Button
           variant="ghost"
           size="icon"
@@ -93,3 +212,13 @@ export function TopBar({ repo, branch, onRefresh, loading }: TopBarProps) {
     </div>
   );
 }
+
+const MoreItem: React.FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent hover:text-accent-foreground"
+  >
+    {label}
+  </button>
+);

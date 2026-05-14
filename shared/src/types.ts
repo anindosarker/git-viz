@@ -136,3 +136,17 @@ export interface BootstrapResponse {
   refs: GitRefsSnapshot;
   firstPage: CommitsGetPageResponse;
 }
+
+// ── Git Action result shape (mutating ops) ────────────────────────────────
+
+export interface GitActionResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+
+export interface GitStateChangedEvent {
+  kind: "git:state-changed";
+  kinds: Array<"refs" | "commits" | "head">;
+}

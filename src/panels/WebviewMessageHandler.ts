@@ -3,6 +3,7 @@ import { ConfigBridge } from "../settings/ConfigBridge";
 import { GitActionHandler } from "./handlers/GitActionHandler";
 import { GitLogHandler } from "./handlers/GitLogHandler";
 import { SystemHandler } from "./handlers/SystemHandler";
+import { makeActionHandlers } from "./handlers/actions.handler";
 import { commitsHandlers } from "./handlers/commits.handler";
 import { makeConfigHandlers } from "./handlers/config.handler";
 import { diffHandlers } from "./handlers/diff.handler";
@@ -34,6 +35,7 @@ export class WebviewMessageHandler {
       ...remotesHandlers,
       ...diffHandlers,
       ...configHandlers,
+      ...makeActionHandlers(),
     ]) {
       this._registry.set(h.command, h);
     }
