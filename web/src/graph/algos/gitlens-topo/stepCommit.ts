@@ -210,6 +210,21 @@ export function stepCommit(
     }
   }
 
+  // 5b. De-duplicate output swimlanes by id (except dead placeholders).
+  //     If two lanes carry the same parent hash, keep leftmost and drop the rest.
+  {
+    const seen = new Set<string>();
+    for (let i = 0; i < outputSwimlanes.length; i++) {
+      const n = outputSwimlanes[i];
+      if (!n.id) continue;
+      if (seen.has(n.id)) {
+        outputSwimlanes[i] = { id: "", color: n.color };
+      } else {
+        seen.add(n.id);
+      }
+    }
+  }
+
   // 6. Trim trailing dead slots (don't trim middle — preserves lane indices).
   while (outputSwimlanes.length > 0 && outputSwimlanes[outputSwimlanes.length - 1].id === "") {
     outputSwimlanes.pop();

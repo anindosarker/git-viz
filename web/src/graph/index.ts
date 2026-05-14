@@ -4,6 +4,7 @@ export * from "./colors";
 export * from "./algos/types";
 export { algorithmRegistry, getAlgorithm, registerAlgorithm } from "./algos/registry";
 export { rollingAlgorithm } from "./algos/rolling";
+export { gitlensTopoAlgorithm } from "./algos/gitlens-topo";
 
 export * from "./render/types";
 export { rendererRegistry, getRenderer, registerRenderer } from "./render/registry";
