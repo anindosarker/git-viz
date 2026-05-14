@@ -25,9 +25,7 @@ function isRemoteTracking(b: GitBranch, locals: GitBranch[]): boolean {
   // Treat as "remote-tracking" if there's a local branch whose upstream is this
   // ref OR a local branch with matching basename. Heuristic, but adequate.
   const base = b.name.includes("/") ? b.name.split("/").slice(1).join("/") : b.name;
-  return locals.some(
-    (l) => l.upstream === b.name || l.name === base
-  );
+  return locals.some((l) => l.upstream === b.name || l.name === base);
 }
 
 export function allocateLanes(
@@ -58,7 +56,13 @@ export function allocateLanes(
   if (headBranchName) {
     const headBranch =
       branches.find((b) => !b.isRemote && b.name === headBranchName) ??
-      ({ name: headBranchName, tip: headHash, isHead: true, isRemote: false, lastCommitDate: "" } as GitBranch);
+      ({
+        name: headBranchName,
+        tip: headHash,
+        isHead: true,
+        isRemote: false,
+        lastCommitDate: "",
+      } as GitBranch);
     ordered.push({ name: headBranch.name, commitHash: headBranch.tip || headHash, kind: "head" });
   } else if (headHash) {
     ordered.push({ name: "HEAD", commitHash: headHash, kind: "head" });

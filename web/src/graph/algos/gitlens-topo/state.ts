@@ -20,11 +20,7 @@ export interface GitLensTopoState {
 }
 
 export function isGitLensTopoState(s: ComputeState | undefined): s is GitLensTopoState {
-  return (
-    !!s &&
-    typeof s === "object" &&
-    (s as { __algo?: string }).__algo === "gitlens-topo"
-  );
+  return !!s && typeof s === "object" && (s as { __algo?: string }).__algo === "gitlens-topo";
 }
 
 export function initialState(

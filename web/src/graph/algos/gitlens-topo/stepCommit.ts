@@ -232,11 +232,7 @@ export function stepCommit(
 
   // 7. HEAD-leftmost enforcement: if this commit is on the head branch chain and lane > 0,
   //    swap to lane 0. We track "head chain" by color match too.
-  if (
-    state.headBranchName &&
-    isHeadBranchCommit(state, commit.hash) &&
-    commitLaneIndex !== 0
-  ) {
+  if (state.headBranchName && isHeadBranchCommit(state, commit.hash) && commitLaneIndex !== 0) {
     // Swap lanes in both input and output where the head chain currently lives.
     const tmp = inputSwimlanes[0];
     inputSwimlanes[0] = inputSwimlanes[commitLaneIndex];
@@ -251,11 +247,7 @@ export function stepCommit(
   }
 
   // 8. Track maxLanesSeen.
-  state.maxLanesSeen = Math.max(
-    state.maxLanesSeen,
-    inputSwimlanes.length,
-    outputSwimlanes.length
-  );
+  state.maxLanesSeen = Math.max(state.maxLanesSeen, inputSwimlanes.length, outputSwimlanes.length);
 
   // 9. Determine kind.
   const isHead = head && commit.hash === head.hash;

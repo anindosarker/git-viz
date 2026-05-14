@@ -53,9 +53,7 @@ describe("gitlens-topo: color stability", () => {
     const allRows = [...p1.rows, ...p2.rows];
     // HEAD chain (m1..m4) should all share the head color
     const mainColors = new Set(
-      allRows
-        .filter((r) => r.commit.hash.startsWith("m"))
-        .map((r) => r.commit.color)
+      allRows.filter((r) => r.commit.hash.startsWith("m")).map((r) => r.commit.color)
     );
     expect(mainColors.size).toBe(1);
   });

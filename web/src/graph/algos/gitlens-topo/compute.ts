@@ -4,10 +4,7 @@ import type { ComputeInput, ComputeResult } from "../types";
 import { cloneState, initialState, isGitLensTopoState, type GitLensTopoState } from "./state";
 import { stepCommit } from "./stepCommit";
 
-function makeWorkingTreeRow(
-  head: GitHeadState,
-  state: GitLensTopoState
-): GraphRow {
+function makeWorkingTreeRow(head: GitHeadState, state: GitLensTopoState): GraphRow {
   const headColor = state.colorMap.get(state.headBranchName ?? "") ?? "#3794ff";
   const commit: CommitRow = {
     hash: `working-tree:${head.hash}`,

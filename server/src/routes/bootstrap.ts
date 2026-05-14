@@ -18,7 +18,10 @@ export function bootstrapRoutes(repoPath: string): Router {
     "/bootstrap",
     wrap(async (req, res) => {
       const limit = req.query.limit ? Number(req.query.limit) : undefined;
-      const data = await GitBootstrapService.get(repoPath, limit);
+      const orderRaw = typeof req.query.order === "string" ? req.query.order : undefined;
+      const order: "topo" | "date" | undefined =
+        orderRaw === "topo" || orderRaw === "date" ? orderRaw : undefined;
+      const data = await GitBootstrapService.get(repoPath, limit, order);
       res.json(data);
     })
   );
