@@ -1,6 +1,6 @@
 import type { CommitRow } from "@/types/git";
 import { useQuery } from "@tanstack/react-query";
-import gitDataService from "../services/git-data.service";
+import { gitService } from "../services/git.service";
 
 export default function useGit() {
   const {
@@ -9,9 +9,12 @@ export default function useGit() {
     error,
     refetch: fetchLog,
   } = useQuery<CommitRow[], Error>({
-    queryKey: ["gitLog"],
-    queryFn: () => gitDataService.getLog(),
-    refetchOnWindowFocus: false, // Prevent excessive refetches in VS Code webview
+    queryKey: ["bootstrap"],
+    queryFn: async () => {
+      const bs = await gitService.bootstrap();
+      return bs.firstPage.commits.map((c) => ({ ...c, refs: [] }));
+    },
+    refetchOnWindowFocus: false,
   });
 
   return {

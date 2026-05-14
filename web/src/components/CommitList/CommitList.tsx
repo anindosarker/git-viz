@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-table";
 import React from "react";
 import { rollingAlgorithm } from "@/graph";
-import gitDataService from "../../services/git-data.service";
+import { gitActions } from "../../services/git-actions.service";
 import { CommitDetails } from "../CommitDetails/CommitDetails";
 import { CommitGraph } from "../Graph/CommitGraph";
 import {
@@ -130,7 +130,7 @@ export const CommitList: React.FC<CommitListProps> = ({ commits, rowHeight, load
                     inset
                     onClick={(e) => {
                       e.stopPropagation();
-                      gitDataService.checkoutCommit(row.original.hash);
+                      gitActions.checkoutCommit(row.original.hash);
                     }}
                   >
                     Switch to Commit...

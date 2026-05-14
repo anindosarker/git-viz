@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { CommitList } from "./components/CommitList/CommitList";
 import { TopBar } from "./components/TopBar/TopBar";
 import useGit from "./hooks/useGit.hook";
-import gitDataService from "./services/git-data.service";
+import { gitService } from "./services/git.service";
 
 const queryClient = new QueryClient();
 
@@ -11,7 +11,7 @@ function GitGraphApp() {
   const rowHeight = 36;
   const { data: repoInfo } = useQuery({
     queryKey: ["repoInfo"],
-    queryFn: () => gitDataService.getRepoInfo(),
+    queryFn: () => gitService.getRepoInfo(),
     refetchOnWindowFocus: false,
   });
 
@@ -19,8 +19,8 @@ function GitGraphApp() {
     <div className="p-4 min-h-screen bg-background text-foreground flex flex-col pt-0">
       {repoInfo && (
         <TopBar
-          repo={repoInfo.repo}
-          branch={repoInfo.branch}
+          repo={repoInfo.name}
+          branch={repoInfo.head.branch ?? repoInfo.head.shortHash}
           onRefresh={() => fetchLog()}
           loading={loading}
         />

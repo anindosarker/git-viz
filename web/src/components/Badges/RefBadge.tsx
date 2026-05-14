@@ -1,6 +1,6 @@
 import { Check, Cloud, Laptop, Tag } from "lucide-react";
 import React from "react";
-import gitDataService from "../../services/git-data.service";
+import { gitActions } from "../../services/git-actions.service";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -112,7 +112,7 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
               onSelect={(e) => {
                 e.preventDefault(); // Prevent closing immediately if needed, though radix usually handles it.
                 // But specifically, use onSelect
-                gitDataService.checkoutBranch(name);
+                gitActions.checkoutBranch(name);
               }}
             >
               Switch to Branch...
@@ -121,7 +121,7 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
               inset
               onSelect={() => {
                 // e.preventDefault();
-                gitDataService.mergeBranch(name);
+                gitActions.mergeBranch(name);
               }}
             >
               Merge Branch into Current Branch...
@@ -130,7 +130,7 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
               inset
               onSelect={() => {
                 // e.preventDefault();
-                gitDataService.deleteBranch(name);
+                gitActions.deleteBranch(name);
               }}
             >
               Delete Branch...
