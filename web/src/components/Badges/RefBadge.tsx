@@ -55,33 +55,33 @@ export const RefBadge: React.FC<RefBadgeProps> = ({ refName }) => {
     return icons;
   };
 
-  // Custom colors to match GitLens style
-  const getStyle = () => {
+  const getStyle = (): React.CSSProperties => {
+    if (isHead) {
+      return {
+        backgroundColor: "var(--gitviz-badge-head-bg)",
+        color: "var(--gitviz-badge-head-fg)",
+        borderColor: "transparent",
+      };
+    }
     switch (type) {
       case "head":
       case "branch":
-        // Greenish/Teal for local branches
         return {
-          backgroundColor: "rgba(20, 80, 70, 0.9)",
-          color: "#4db6ac",
-          borderColor: "#26a69a",
-          borderWidth: "1px",
+          backgroundColor: "var(--gitviz-badge-bg)",
+          color: "var(--gitviz-badge-fg)",
+          borderColor: "transparent",
         };
       case "remote":
-        // Blue for remote branches
         return {
-          backgroundColor: "rgba(20, 60, 100, 0.9)",
-          color: "#64b5f6",
-          borderColor: "#42a5f5",
-          borderWidth: "1px",
+          backgroundColor: "var(--gitviz-badge-remote-bg)",
+          color: "var(--gitviz-badge-remote-fg)",
+          borderColor: "transparent",
         };
       case "tag":
-        // Yellow/Brown for tags
         return {
-          backgroundColor: "rgba(80, 70, 20, 0.9)",
-          color: "#ffd54f",
-          borderColor: "#ffca28",
-          borderWidth: "1px",
+          backgroundColor: "var(--gitviz-badge-tag-bg)",
+          color: "var(--gitviz-badge-tag-fg)",
+          borderColor: "transparent",
         };
       default:
         return {};
