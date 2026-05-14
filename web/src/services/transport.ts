@@ -1,8 +1,20 @@
 import type { WebviewApi } from "vscode-webview";
 import { getVsCodeApi } from "./vscodeApi";
 
+export interface TransportEvent {
+  name: string;
+  payload?: unknown;
+}
+
+export type EventListener = (event: TransportEvent) => void;
+
 export interface Transport {
   request<T>(command: string, payload?: unknown): Promise<T>;
+  /**
+   * Subscribe to backend-pushed events (e.g. "git:state-changed"). Returns an
+   * unsubscribe function.
+   */
+  on(listener: EventListener): () => void;
 }
 
 interface WebviewResponse {
@@ -10,6 +22,12 @@ interface WebviewResponse {
   command: string;
   data?: unknown;
   error?: string;
+}
+
+interface WebviewEvent {
+  kind: "event";
+  name: string;
+  payload?: unknown;
 }
 
 type Pending = {
@@ -27,16 +45,28 @@ function newRequestId(): string {
 export class VSCodeTransport implements Transport {
   private readonly vscode: WebviewApi<unknown>;
   private readonly pending = new Map<string, Pending>();
+  private readonly listeners = new Set<EventListener>();
 
   constructor(vscode: WebviewApi<unknown>) {
     this.vscode = vscode;
     window.addEventListener("message", this.onMessage);
   }
 
-  private onMessage = (event: MessageEvent<WebviewResponse>) => {
+  private onMessage = (event: MessageEvent<WebviewResponse | WebviewEvent>) => {
     const msg = event.data;
     if (!msg || typeof msg !== "object") return;
-    const { id, command, data, error } = msg;
+    if ((msg as WebviewEvent).kind === "event") {
+      const evt = msg as WebviewEvent;
+      for (const l of this.listeners) {
+        try {
+          l({ name: evt.name, payload: evt.payload });
+        } catch {
+          /* swallow */
+        }
+      }
+      return;
+    }
+    const { id, command, data, error } = msg as WebviewResponse;
     if (!id || !command || !command.endsWith(":response")) return;
     const entry = this.pending.get(id);
     if (!entry) return;
@@ -52,13 +82,37 @@ export class VSCodeTransport implements Transport {
       this.vscode.postMessage({ id, command, payload });
     });
   }
+
+  on(listener: EventListener): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
 }
 
 export class StandaloneTransport implements Transport {
   private readonly base: string;
+  private readonly listeners = new Set<EventListener>();
 
   constructor(base = "") {
     this.base = base;
+  }
+
+  on(listener: EventListener): () => void {
+    // Standalone mode in Plan 5d has no push channel. Plan 5e adds SSE; for
+    // now we still register so callers don't have to special-case, and we
+    // synthesize the event after action requests.
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  emit(event: TransportEvent): void {
+    for (const l of this.listeners) {
+      try {
+        l(event);
+      } catch {
+        /* swallow */
+      }
+    }
   }
 
   async request<T>(command: string, payload?: unknown): Promise<T> {
@@ -80,10 +134,19 @@ export class StandaloneTransport implements Transport {
       }
       throw new Error(message);
     }
+    let result: T;
     if (route.responseType === "text") {
-      return (await res.text()) as unknown as T;
+      result = (await res.text()) as unknown as T;
+    } else {
+      result = (await res.json()) as T;
     }
-    return (await res.json()) as T;
+    if (command.startsWith("actions:")) {
+      this.emit({
+        name: "git:state-changed",
+        payload: { kinds: ["refs", "commits", "head"] },
+      });
+    }
+    return result;
   }
 
   private static route(
@@ -125,15 +188,21 @@ export class StandaloneTransport implements Transport {
       case "remotes:list":
         return { method: "GET", path: "/api/remotes" };
       default:
+        if (command.startsWith("actions:")) {
+          // "actions:branch:create" -> "/api/actions/branch/create"
+          const subpath = command.slice("actions:".length).replace(/:/g, "/");
+          return { method: "POST", path: `/api/actions/${subpath}`, body: p };
+        }
         throw new Error(`StandaloneTransport: no REST mapping for command "${command}"`);
     }
   }
 }
 
+let sharedTransport: Transport | undefined;
+
 export function makeTransport(): Transport {
+  if (sharedTransport) return sharedTransport;
   const api = getVsCodeApi();
-  if (api) {
-    return new VSCodeTransport(api);
-  }
-  return new StandaloneTransport();
+  sharedTransport = api ? new VSCodeTransport(api) : new StandaloneTransport();
+  return sharedTransport;
 }
