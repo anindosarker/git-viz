@@ -92,11 +92,15 @@
   --vscode-scrollbarSlider-background: #79797966;
   --vscode-scrollbarSlider-hoverBackground: #646464b3;
   --vscode-scrollbarSlider-activeBackground: #bfbfbf66;
-  --vscode-scmGraph-foreground1: #c5963f;
-  --vscode-scmGraph-foreground2: #b85586;
-  --vscode-scmGraph-foreground3: #994f00;
-  --vscode-scmGraph-foreground4: #40b0a6;
-  --vscode-scmGraph-foreground5: #9b6bd0;
+  /* GitLens-leaning muted graph palette: cool blue + violet + sage + amber +
+   * salmon + lavender. ~20% more desaturated than the prior IBM-derived set,
+   * which read too bright against the editor background. */
+  --vscode-scmGraph-foreground1: #3794ff;
+  --vscode-scmGraph-foreground2: #b180d7;
+  --vscode-scmGraph-foreground3: #89d185;
+  --vscode-scmGraph-foreground4: #d18616;
+  --vscode-scmGraph-foreground5: #f14c4c;
+  --vscode-scmGraph-foreground6: #b66dff;
 
   /* shadcn → VS Code token bridge */
   --background: var(--vscode-editor-background);

@@ -1,10 +1,9 @@
 /*
- * Fallbacks are VS Code Dark+ scmGraph defaults (desaturated from the original
- * IBM-style palette: lane 1 #ffb000 → #c5963f, lane 2 #dc267f → #b85586,
- * lane 5 #b66dff → #9b6bd0). Lanes 3 and 4 already sit close to the VS Code
- * Dark+ values and are kept as-is.
+ * Fallbacks are the GitLens-leaning muted palette declared in index.css
+ * (--vscode-scmGraph-foreground{1..6}). Kept here so the canvas renderer has a
+ * sane palette before CSS variables resolve.
  */
-const LANE_FALLBACKS = ["#c5963f", "#b85586", "#994f00", "#40b0a6", "#9b6bd0"];
+const LANE_FALLBACKS = ["#3794ff", "#b180d7", "#89d185", "#d18616", "#f14c4c", "#b66dff"];
 const HEAD_FALLBACK = "#b180d7";
 
 let cachedLanes: string[] | null = null;
@@ -52,6 +51,7 @@ export const GRAPH_PALETTE: string[] = [
   "var(--gitviz-graph-lane-3)",
   "var(--gitviz-graph-lane-4)",
   "var(--gitviz-graph-lane-5)",
+  "var(--gitviz-graph-lane-6)",
 ];
 
 export function colorForIndex(index: number): string {
