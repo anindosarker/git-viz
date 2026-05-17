@@ -159,7 +159,7 @@ function GitGraphApp() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={300}>
+      <TooltipProvider delayDuration={500}>
         <GitGraphApp />
       </TooltipProvider>
     </QueryClientProvider>
