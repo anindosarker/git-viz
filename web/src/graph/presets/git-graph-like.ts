@@ -7,7 +7,7 @@ export const gitGraphLikePreset: ViewPreset = {
   algorithmId: "rolling",
   rendererId: "hybrid-canvas-wide",
   defaultRefDisplay: "inline",
-  defaultRowHeight: 28,
+  defaultRowHeight: 22,
   defaultColumns: [
     { id: "graph", visible: true, width: 200 },
     { id: "subject", visible: true, width: "flex", refsInline: true },

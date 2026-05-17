@@ -5,7 +5,7 @@ export const hybridCanvasMedium = makeHybridCanvasRenderer(
   "hybrid-canvas-medium",
   "Medium (VS Code SCM)",
   {
-    defaultRowHeight: 24,
+    defaultRowHeight: 22,
     defaultLaneWidth: 20,
     nodeRadius: 5,
     showInitials: false,

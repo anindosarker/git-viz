@@ -2,7 +2,7 @@ import { makeHybridCanvasRenderer } from "./hybrid-canvas-shared";
 import { registerRenderer } from "./registry";
 
 export const hybridCanvasWide = makeHybridCanvasRenderer("hybrid-canvas-wide", "Wide (Git Graph)", {
-  defaultRowHeight: 28,
+  defaultRowHeight: 22,
   defaultLaneWidth: 24,
   nodeRadius: 5,
   showInitials: false,

@@ -7,7 +7,7 @@ export const vscodeScmGraphLikePreset: ViewPreset = {
   algorithmId: "rolling",
   rendererId: "hybrid-canvas-medium",
   defaultRefDisplay: "right-column",
-  defaultRowHeight: 24,
+  defaultRowHeight: 22,
   defaultColumns: [
     { id: "graph", visible: true, width: 200 },
     { id: "subject", visible: true, width: "flex" },
