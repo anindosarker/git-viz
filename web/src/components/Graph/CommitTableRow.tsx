@@ -27,6 +27,14 @@ const CommitTableRowImpl: React.FC<Props> = ({
   const setRef = (node: HTMLDivElement | null) => {
     if (node) virtualizer.measureElement(node);
   };
+  const tintColor = commit.color;
+  const rowStyle: React.CSSProperties & Record<"--gitviz-row-tint", string> = {
+    transform: `translateY(${virtualItem.start}px)`,
+    display: "grid",
+    gridTemplateColumns: gridTemplate,
+    alignItems: "center",
+    "--gitviz-row-tint": tintColor ?? "transparent",
+  };
   return (
     <CommitContextMenu commit={commit}>
       <div
@@ -35,12 +43,7 @@ const CommitTableRowImpl: React.FC<Props> = ({
         data-selected={isSelected ? "true" : undefined}
         data-testid="commit-row"
         className="absolute left-0 right-0 cursor-pointer gitviz-row"
-        style={{
-          transform: `translateY(${virtualItem.start}px)`,
-          display: "grid",
-          gridTemplateColumns: gridTemplate,
-          alignItems: "center",
-        }}
+        style={rowStyle}
         onClick={() => onSelect(commit.hash)}
       >
         {cells.map((cell) => {

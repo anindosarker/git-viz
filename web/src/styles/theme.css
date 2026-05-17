@@ -13,21 +13,28 @@
   --gitviz-graph-lane-3: var(--vscode-scmGraph-foreground3);
   --gitviz-graph-lane-4: var(--vscode-scmGraph-foreground4);
   --gitviz-graph-lane-5: var(--vscode-scmGraph-foreground5);
+  --gitviz-graph-lane-6: var(--vscode-scmGraph-foreground6);
   --gitviz-graph-head: var(--vscode-charts-purple);
 
   /* Row backgrounds */
   --gitviz-row-bg: transparent;
   --gitviz-row-bg-hover: var(--vscode-list-hoverBackground);
-  /* Use the softer inactive selection background (a subtle grey in Dark+)
-   * instead of the saturated activeSelection blue so commit text stays
-   * readable. Focus is signalled by a left-edge accent border. */
-  --gitviz-row-bg-selected: var(--vscode-list-inactiveSelectionBackground);
+  /* Selected row uses the saturated active selection background — matches
+   * GitLens which keeps the focused commit clearly distinguished even when
+   * other panels (diff, side rail) own focus. Text colour is overridden so
+   * the row remains readable against the strong fill. */
+  --gitviz-row-bg-selected: var(--vscode-list-activeSelectionBackground);
+  --gitviz-row-fg-selected: var(--vscode-list-activeSelectionForeground);
   --gitviz-row-bg-selected-hover: color-mix(
     in srgb,
-    var(--vscode-list-inactiveSelectionBackground) 70%,
+    var(--vscode-list-activeSelectionBackground) 85%,
     var(--vscode-list-hoverBackground)
   );
   --gitviz-row-focus-border: var(--vscode-focusBorder);
+
+  /* Row branch tint — drives the faint horizontal stripe coloured by the
+   * commit's lane. Resolved per-row via the --gitviz-row-tint inline style. */
+  --gitviz-row-tint-alpha: 11%;
 
   /* Backwards-compat aliases (older naming) */
   --gitviz-graph-row-bg: var(--gitviz-row-bg-hover);
@@ -82,16 +89,54 @@
   --gitviz-focus-border: var(--vscode-focusBorder);
 }
 
-/* Row hover and selection states — matches VS Code list patterns. */
+/* Row hover and selection states — matches VS Code list patterns.
+ *
+ * The faint per-row branch tint is painted via ::before so the hover and
+ * selection fills (set on the row itself) stack on top of it without having
+ * to recompute a combined gradient on every state change. */
 .gitviz-row {
+  position: relative;
   background-color: var(--gitviz-row-bg);
+}
+.gitviz-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(
+        in srgb,
+        var(--gitviz-row-tint, transparent) var(--gitviz-row-tint-alpha),
+        transparent
+      )
+      18%,
+    color-mix(
+        in srgb,
+        var(--gitviz-row-tint, transparent) var(--gitviz-row-tint-alpha),
+        transparent
+      )
+      85%,
+    transparent 100%
+  );
+  z-index: 0;
+}
+.gitviz-row > * {
+  position: relative;
+  z-index: 1;
 }
 .gitviz-row:hover {
   background-color: var(--gitviz-row-bg-hover);
 }
 .gitviz-row[data-selected="true"] {
   background-color: var(--gitviz-row-bg-selected);
+  color: var(--gitviz-row-fg-selected);
   box-shadow: inset 2px 0 0 var(--gitviz-row-focus-border);
+}
+.gitviz-row[data-selected="true"]::before {
+  /* Selection fill should fully dominate the branch tint. */
+  opacity: 0;
 }
 .gitviz-row[data-selected="true"]:hover {
   background-color: var(--gitviz-row-bg-selected-hover);
